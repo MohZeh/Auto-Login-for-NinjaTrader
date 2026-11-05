@@ -1,0 +1,38 @@
+name: Windows build and checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.403'
+      - name: Repository hygiene
+        shell: pwsh
+        run: ./scripts/check-repository.ps1
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1
+      - name: Headless, layout and fake-target checks
+        shell: pwsh
+        run: ./scripts/test.ps1 -NoBuild
+      - name: Verify formatting
+        shell: pwsh
+        run: dotnet format NinjaTraderLogin.sln --no-restore --verify-no-changes
+      - name: Packaging regression checks
+        shell: pwsh
+        run: ./scripts/test-packaging.ps1
+      - name: Portable shortcut checks
+        shell: pwsh
+        run: ./scripts/test-portability.ps1

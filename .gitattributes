@@ -1,0 +1,4 @@
+# Preserve byte-hashed build/evidence inputs; accept native CRLF in whitespace review.
+* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Retain the upstream font license byte-for-byte, including its original whitespace.
+assets/fonts/OFL.txt -whitespace

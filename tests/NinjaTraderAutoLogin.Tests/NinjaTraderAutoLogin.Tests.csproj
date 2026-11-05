@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>NinjaTraderAutoLogin.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NinjaTraderAutoLogin\NinjaTraderAutoLogin.csproj" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
+    <Content Include="fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\src\NinjaTraderAutoLogin\App.config" Link="test-inputs\App.config" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\src\NinjaTraderAutoLogin\app.manifest" Link="test-inputs\app.manifest" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

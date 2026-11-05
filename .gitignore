@@ -1,0 +1,17 @@
+.local/
+artifacts/
+**/bin/
+**/obj/
+.vs/
+.idea/
+TestResults/
+*.user
+*.suo
+*.lnk
+*.log
+*.tmp
+*.bundle
+*.zip
+.env
+.env.*
+!.env.example

@@ -1,0 +1,11 @@
+{
+  "project": "Vazir",
+  "version": "30.1.0",
+  "release": "https://github.com/rastikerdar/vazirmatn/releases/tag/v30.1.0",
+  "archive": "https://github.com/rastikerdar/vazirmatn/releases/download/v30.1.0/vazir-font-v30.1.0.zip",
+  "archiveSha256": "0B10A9624F45B00C68A22B5727697EBC0ED94D5BF067E81CDAD02D5E7E91F02D",
+  "license": "SIL Open Font License 1.1",
+  "regularSha256": "7BC35750358416A6A7189B02D39B945605B8F2FC6A425521C41051A0209CB564",
+  "boldSha256": "26B014151DB38EB6A7455C4FCEAF1C6C8E58C9C96CD7D1D0ABEA64288D0B5C18",
+  "runtimeSource": "Embedded assembly resources, never installed fonts or files"
+}

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>NinjaTrader</AssemblyName>
+    <RootNamespace>NinjaTraderAutoLogin.FakeTarget</RootNamespace>
+    <Description>Test-only WPF window with the login controls of NinjaTrader. It has no connection to NinjaTrader.</Description>
+    <Version>0.0.0.1</Version>
+    <AssemblyVersion>0.0.0.1</AssemblyVersion>
+    <FileVersion>0.0.0.1</FileVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>

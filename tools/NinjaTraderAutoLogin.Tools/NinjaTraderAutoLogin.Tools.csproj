@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>NinjaTraderAutoLogin.Tools</AssemblyName>
+    <StartupObject>NinjaTraderAutoLogin.Tools.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NinjaTraderAutoLogin\NinjaTraderAutoLogin.csproj" />
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+</Project>

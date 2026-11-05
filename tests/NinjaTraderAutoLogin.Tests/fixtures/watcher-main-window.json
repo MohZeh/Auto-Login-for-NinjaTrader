@@ -1,0 +1,670 @@
+{
+  "SchemaVersion": 2,
+  "Events": [
+    {
+      "Action": "Observed",
+      "Controls": [
+        {
+          "AutomationId": "tbUserName",
+          "ClassName": "TextBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "passwordBox",
+          "ClassName": "PasswordBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": true,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "btnLogin",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        }
+      ]
+    },
+    {
+      "Action": "Observed",
+      "Controls": [
+        {
+          "AutomationId": "tbUserName",
+          "ClassName": "TextBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "passwordBox",
+          "ClassName": "PasswordBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": true,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "btnLogin",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonClose",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        }
+      ]
+    },
+    {
+      "Action": "Observed",
+      "Controls": [
+        {
+          "AutomationId": "tbUserName",
+          "ClassName": "TextBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "passwordBox",
+          "ClassName": "PasswordBox",
+          "ControlType": "ControlType.Edit",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": true,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "btnLogin",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": true,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "btnSimulation",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        }
+      ]
+    },
+    {
+      "Action": "Observed",
+      "Controls": [
+        {
+          "AutomationId": "unpinBtn",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMinimize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMaximize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonClose",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Save",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "SaveAll",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Print",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "PrintPreview",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Output",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Cut",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Copy",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Paste",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Delete",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Undo",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Redo",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "FindReplace",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Compile",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "VisualStudio",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        }
+      ]
+    },
+    {
+      "Action": "Observed",
+      "Controls": [
+        {
+          "AutomationId": "ControlCenter",
+          "ClassName": "ControlCenter",
+          "ControlType": "ControlType.Custom",
+          "Enabled": true,
+          "InvokePattern": false,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": true
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMinimize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMaximize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonClose",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "unpinBtn",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMinimize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonMaximize",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "NTWindowButtonClose",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Save",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "SaveAll",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Print",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "PrintPreview",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Output",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Cut",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Copy",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Paste",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Delete",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Undo",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Redo",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "FindReplace",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "Compile",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": false,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        },
+        {
+          "AutomationId": "VisualStudio",
+          "ClassName": "Button",
+          "ControlType": "ControlType.Button",
+          "Enabled": true,
+          "InvokePattern": true,
+          "IsPassword": false,
+          "Offscreen": false,
+          "ValuePattern": false
+        }
+      ]
+    }
+  ]
+}
