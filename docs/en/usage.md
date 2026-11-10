@@ -99,4 +99,4 @@ Settings stay in `%LOCALAPPDATA%\NinjaTraderAutoLogin`, and the password stays i
 4. In the app folder, run `./setup-shortcuts.ps1 -Remove` in PowerShell to remove its two shortcuts.
 5. Delete the app folder.
 
-Local diagnostic records and settings remain in `%LOCALAPPDATA%\NinjaTraderAutoLogin`. Delete that folder too if you want to remove everything.
+Local diagnostic records and settings remain in `%LOCALAPPDATA%\NinjaTraderAutoLogin`. Delete that folder too if you want to remove everything. While NinjaTrader's refusal of a password is held, the app also keeps a small registry value under `HKCU\Software\NinjaTraderAutoLogin`; **Remove saved login** in step 2 removes it.

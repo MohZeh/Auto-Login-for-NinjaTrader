@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
+using Microsoft.Win32;
 using NinjaTraderAutoLogin;
 
 internal sealed class FakeClock : IClock
@@ -1188,6 +1189,49 @@ internal static partial class TestRunner
             var guarded = new UnrejectedCredentials(AutomationWorker.Refusal(true, () => false), credentials);
             LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
             Require(result.Outcome == Outcome.CredentialsRejected && credentials.Reads == 0 && ui.Submissions == 0);
+        });
+        Test("A refused password survives a failed settings save and a restart", delegate
+        {
+            const string root = @"Software\NinjaTraderAutoLogin.Tests";
+            string path = root + @"\" + Guid.NewGuid().ToString("N");
+            try
+            {
+                var latch = new RejectionLatch(path);
+                Require(latch.Read() == RefusalState.None && latch.Write(RefusalState.Rejected));
+                // The settings save failed, so the file still says not rejected. A new latch
+                // over the same key stands for the app after a restart.
+                var file = new Settings();
+                var restarted = new RejectionLatch(path);
+                Require(RejectionLatch.Combine(RejectionLatch.Of(file), restarted.Read()) == RefusalState.Rejected);
+                var credentials = new FakeCredentials();
+                var ui = Script(new UiSnapshot { LoginReady = true });
+                var guarded = new UnrejectedCredentials(AutomationWorker.Refusal(false, () => file.CredentialsRejected || restarted.Read() != RefusalState.None), credentials);
+                LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
+                Require(result.Outcome == Outcome.CredentialsRejected && credentials.Reads == 0 && ui.Submissions == 0);
+                Require(latch.Write(RefusalState.Uncertain) && restarted.Read() == RefusalState.Uncertain);
+                // Clearing leaves nothing behind in the registry.
+                Require(latch.Write(RefusalState.None) && restarted.Read() == RefusalState.None);
+                using (RegistryKey left = Registry.CurrentUser.OpenSubKey(path))
+                {
+                    Require(left == null);
+                }
+            }
+            finally { Registry.CurrentUser.DeleteSubKeyTree(root, false); }
+        });
+        Test("A certain refusal outranks an uncertain one in either record", delegate
+        {
+            Require(RejectionLatch.Combine(RefusalState.None, RefusalState.None) == RefusalState.None);
+            Require(RejectionLatch.Combine(RefusalState.Uncertain, RefusalState.None) == RefusalState.Uncertain);
+            Require(RejectionLatch.Combine(RefusalState.None, RefusalState.Rejected) == RefusalState.Rejected);
+            Require(RejectionLatch.Combine(RefusalState.Uncertain, RefusalState.Rejected) == RefusalState.Rejected);
+            Require(RejectionLatch.Of(new Settings()) == RefusalState.None);
+            Require(RejectionLatch.Of(new Settings { CredentialsRejected = true }) == RefusalState.Rejected);
+            Require(RejectionLatch.Of(new Settings { CredentialsRejected = true, RejectionUncertain = true }) == RefusalState.Uncertain);
+            foreach (string language in new[] { "en", "fa" })
+            {
+                Require(Messages.For(Outcome.RefusalNotCleared, language) != Messages.For(Outcome.CredentialsRejected, language) &&
+                    Messages.For(Outcome.RefusalNotCleared, language) != Messages.For(Outcome.UnexpectedFailure, language));
+            }
         });
         Test("Only a valid NinjaTrader publisher signature is trusted", delegate
         {
