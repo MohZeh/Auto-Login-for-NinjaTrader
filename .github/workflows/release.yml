@@ -65,6 +65,9 @@ jobs:
           if (-not (Test-Path -LiteralPath $notes)) { throw "Missing release notes: $notes" }
           $assets = @(Get-ChildItem artifacts/packages -File | ForEach-Object { $_.FullName })
           # A version with a suffix, such as 0.1.0-rc.1, is published as a pre-release.
-          $prerelease = if ($version.Contains('-')) { @('--prerelease') } else { @() }
+          # Kept as an array: a one-item result of `if` becomes a string, which splatting
+          # would split into single characters.
+          $prerelease = @()
+          if ($version.Contains('-')) { $prerelease += '--prerelease' }
           gh release create $env:GITHUB_REF_NAME @assets --verify-tag @prerelease --title "Auto Login for NinjaTrader $version" --notes-file $notes
           if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
