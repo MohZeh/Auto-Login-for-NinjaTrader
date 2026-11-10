@@ -15,7 +15,7 @@ function New-PackagingFixture([string]$Name) {
     foreach ($file in @('NinjaTraderAutoLogin.exe.config', 'assets\launch.ico', 'assets\settings.ico', 'licenses\Vazir-OFL.txt')) {
         Set-Content -LiteralPath (Join-Path (Split-Path $exe -Parent) $file) -Value 'fixture' -Encoding UTF8
     }
-    foreach ($file in @('README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md')) {
+    foreach ($file in @('README.md', 'README.fa.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md')) {
         Set-Content -LiteralPath (Join-Path $root $file) -Value 'fixture' -Encoding UTF8
     }
     [ordered]@{ version = '0.0.0-fixture'; configuration = 'Release'; executable = $relative; helperSha256 = (Get-FileHash -LiteralPath $exe).Hash; sourceInputs = @() } |
