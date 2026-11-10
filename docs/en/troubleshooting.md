@@ -50,6 +50,8 @@ The saved login is not deleted automatically, because the cause may be a locked 
 | *Watching paused. Check NinjaTrader's path and access level.* | Check the path, run both programs as the same Windows user, then resume |
 | *Windows startup needs attention. Review the launch method and save again.* | Select the start method again and select **Save settings** |
 | *Settings saved, but the record of the earlier refused password could not be cleared, so automatic sign-in stays on hold.* | Your new details are saved. Select **Save settings** again; if it repeats, check that your Windows user can use its registry |
+| *Settings saved, but the record of refused passwords could not be checked, so the password will not be sent until it can be read.* | Your new details are saved, but Windows did not let the app read its registry record. Select **Save settings** again; if it repeats, check that your Windows user can use its registry |
+| *Saved credentials removed, but the app could not confirm that its record of an earlier refused password was cleared.* | Your password is removed. The record is checked again the next time you save new details |
 
 ## Other problems
 

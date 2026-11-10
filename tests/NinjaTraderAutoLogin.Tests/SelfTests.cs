@@ -1289,6 +1289,11 @@ internal static partial class TestRunner
             Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.None, unreadable) == RefusalState.None);
             Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.None, RefusalReading.Known(RefusalState.Rejected)) == RefusalState.Rejected);
             Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.Rejected, RefusalReading.Known(RefusalState.None)) == RefusalState.None);
+            // What the app says after a clear it could not confirm: never a plain success when unknown.
+            Require(RefusalPolicy.AfterFailedClear(RefusalState.Rejected, unreadable) == FailedClear.Kept);
+            Require(RefusalPolicy.AfterFailedClear(RefusalState.Uncertain, RefusalReading.Known(RefusalState.Uncertain)) == FailedClear.Kept);
+            Require(RefusalPolicy.AfterFailedClear(RefusalState.None, unreadable) == FailedClear.Unchecked);
+            Require(RefusalPolicy.AfterFailedClear(RefusalState.None, RefusalReading.Known(RefusalState.None)) == FailedClear.Cleared);
             // A certain refusal outranks an uncertain one in either record.
             Require(RefusalPolicy.Combine(RefusalState.None, RefusalState.None) == RefusalState.None);
             Require(RefusalPolicy.Combine(RefusalState.Uncertain, RefusalState.None) == RefusalState.Uncertain);
@@ -1305,8 +1310,12 @@ internal static partial class TestRunner
                     Messages.For(Outcome.CredentialsRejected, language), Messages.For(Outcome.UnexpectedFailure, language)
                 };
                 Require(texts.Count == 4);
-                Require(UiText.Status("savedRefusalKept", language) != UiText.Status("savedShortcut", language) &&
-                    UiText.Status("savedRefusalKept", language) != UiText.Status("ready", language));
+                var statuses = new HashSet<string>
+                {
+                    UiText.Status("savedRefusalKept", language), UiText.Status("savedRefusalUnchecked", language),
+                    UiText.Status("savedShortcut", language), UiText.Status("savedWatch", language), UiText.Status("ready", language)
+                };
+                Require(statuses.Count == 5);
             }
         });
         Test("A refused password survives a failed settings save and a restart", delegate

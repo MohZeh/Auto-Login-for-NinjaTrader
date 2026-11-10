@@ -1286,7 +1286,7 @@ namespace NinjaTraderAutoLogin
             try
             {
                 credentials.Delete();
-                owner.CredentialsRemoved();
+                bool recordsCleared = owner.CredentialsRemoved();
                 storedUsername = null;
                 userInput.Field.Clear();
                 passwordInput.Field.Clear();
@@ -1294,7 +1294,16 @@ namespace NinjaTraderAutoLogin
                 HidePassword();
                 UpdateEye();
                 SelectPage(false);
-                Feedback("Saved credentials removed.", "اطلاعات ورود ذخیره‌شده حذف شد.", false);
+                if (recordsCleared)
+                {
+                    Feedback("Saved credentials removed.", "اطلاعات ورود ذخیره‌شده حذف شد.", false);
+                }
+                else
+                {
+                    // The password itself is gone; only the app's own record could not be confirmed.
+                    Feedback("Saved credentials removed, but the app could not confirm that its record of an earlier refused password was cleared. It is checked again when you save new details.",
+                        "اطلاعات ورود ذخیره‌شده حذف شد، ولی پاک شدنِ ثبتِ ردشدن قبلی رمز تأیید نشد. با ذخیرهٔ اطلاعات جدید دوباره بررسی می‌شود.", true);
+                }
             }
             catch (Exception error) { AppFaults.Record("DeleteCredentials", error); Feedback("Saved credentials could not be removed.", "حذف اطلاعات ذخیره‌شده انجام نشد.", true); }
         }
