@@ -26,3 +26,22 @@ historical test journal belongs in publication history.
 Do not normalize upstream font/license bytes. Follow `.editorconfig` for authored source.
 The repository preserves file bytes; deterministic compilation and source path mapping
 avoid recording the checkout's machine-specific source directory in debug paths.
+
+## Releases
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`. It refuses a tagged commit that is
+not on `main` or a tag whose release already exists, checks that the tag matches the version
+in `Directory.Build.props` and that `docs/release-notes/<tag>.md` exists, runs every check,
+packages, attests and publishes. A version with a suffix, such as `0.1.0-rc.1`, becomes a
+pre-release.
+
+To rehearse a release first, run the **Release** workflow by hand on the branch with the
+planned tag as input:
+
+```powershell
+gh workflow run release.yml --ref main -f tag=v0.1.0
+```
+
+A rehearsal runs the same checks and builds the package, then stops before attestation and
+publishing. Its summary shows the application hash, the package hashes and the exact
+`gh release create` command a real release would run.
