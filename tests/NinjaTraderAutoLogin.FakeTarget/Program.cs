@@ -35,6 +35,10 @@ namespace NinjaTraderAutoLogin.FakeTarget
                 {
                     After(1500, ShowLogin);
                 }
+                else if (scenario.StartsWith("modes", StringComparison.Ordinal))
+                {
+                    ShowModes();
+                }
                 else
                 {
                     ShowLogin();
@@ -138,7 +142,7 @@ namespace NinjaTraderAutoLogin.FakeTarget
                 Note("mode Simulation");
                 Opened(window);
             }));
-            panel.Children.Add(Command("btnLiveTrading", scenario == "no-live-account" ? "Open Account" : "Live Trading", delegate
+            panel.Children.Add(Command("btnLiveTrading", scenario == "no-live-account" || scenario == "modes-open-account" ? "Open Account" : "Live Trading", delegate
             {
                 Note("mode Live");
                 Opened(window);

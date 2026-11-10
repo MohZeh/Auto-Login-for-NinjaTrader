@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace NinjaTraderAutoLogin
 {
@@ -110,6 +111,43 @@ namespace NinjaTraderAutoLogin
             }
 
             return credentials.Read();
+        }
+    }
+
+    // Nothing is typed or clicked in a file that is not signed by NinjaTrader, including the
+    // environment choice on an already signed-in window, where no password is read.
+    internal sealed class TrustedTargetUi : ILoginUi
+    {
+        private readonly ILoginUi ui;
+        private readonly string path;
+        private readonly Func<string, bool> trusted;
+
+        public TrustedTargetUi(ILoginUi ui, string path, Func<string, bool> trusted)
+        {
+            this.ui = ui;
+            this.path = path;
+            this.trusted = trusted;
+        }
+        public UiSnapshot Inspect()
+        {
+            return ui.Inspect();
+        }
+        public void Submit(Secret credentials, CancellationToken cancellation)
+        {
+            Require();
+            ui.Submit(credentials, cancellation);
+        }
+        public void SelectMode(TradingMode mode, CancellationToken cancellation)
+        {
+            Require();
+            ui.SelectMode(mode, cancellation);
+        }
+        private void Require()
+        {
+            if (!trusted(path))
+            {
+                throw new LoginProblem(Outcome.UntrustedTarget);
+            }
         }
     }
 

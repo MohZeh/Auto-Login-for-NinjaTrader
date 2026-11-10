@@ -22,8 +22,12 @@ system encoding; replies use the worker's redirected standard output.
 
 Before starting work, the coordinator classifies the target's file version as tested,
 unknown or invalid. An unknown version shows a notice; Live also needs one agreement per
-version, and an invalid version stops. The worker reads the password only through a wrapper
-that first requires a valid `NinjaTrader, LLC` signature on the target file.
+version, and an invalid version stops. The coordinator starts NinjaTrader only after its file
+has a valid `NinjaTrader, LLC` signature. In the worker, wrappers require the same signature
+before the password is read and before any text entry or button press in the target, so an
+already signed-in environment screen is covered too. The parent passes its in-memory record
+of a rejected password with each request, so the worker refuses it even if saving that
+record failed.
 
 The worker verifies the request against the existing run record and process identity.
 The engine inspects login, submits once, selects only the requested mode once, and waits

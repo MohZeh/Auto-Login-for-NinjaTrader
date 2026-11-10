@@ -309,24 +309,9 @@ namespace NinjaTraderAutoLogin
         {
             foreach (AutomationElement button in Find("btnLiveTrading", windows))
             {
-                if (!Visible(button))
-                {
-                    continue;
-                }
-
-                if (ContainsAny(button.Current.Name ?? String.Empty, AccountCreation))
+                if (Visible(button) && OffersAccountCreation(button))
                 {
                     return true;
-                }
-
-                AutomationElementCollection labels = button.FindAll(TreeScope.Descendants,
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
-                foreach (AutomationElement label in labels)
-                {
-                    if (ContainsAny(label.Current.Name ?? String.Empty, AccountCreation))
-                    {
-                        return true;
-                    }
                 }
             }
 
@@ -368,11 +353,38 @@ namespace NinjaTraderAutoLogin
             catch (UnauthorizedAccessException) { throw new LoginProblem(Outcome.AccessDenied); }
         }
 
+        private static bool OffersAccountCreation(AutomationElement button)
+        {
+            if (ContainsAny(button.Current.Name ?? String.Empty, AccountCreation))
+            {
+                return true;
+            }
+
+            AutomationElementCollection labels = button.FindAll(TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
+            foreach (AutomationElement label in labels)
+            {
+                if (ContainsAny(label.Current.Name ?? String.Empty, AccountCreation))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public void SelectMode(TradingMode mode, CancellationToken cancellation)
         {
             try
             {
                 AutomationElement selected = Unique(mode == TradingMode.Live ? "btnLiveTrading" : "btnSimulation", ControlType.Button, false, false, true);
+                // The earlier inspection saw a real Live account; the button itself is checked again
+                // so a label that changed in between still never opens an account page.
+                if (mode == TradingMode.Live && OffersAccountCreation(selected))
+                {
+                    throw new LoginProblem(Outcome.LiveAccountUnavailable);
+                }
+
                 cancellation.ThrowIfCancellationRequested();
                 process.Verify();
                 ((InvokePattern)selected.GetCurrentPattern(InvokePattern.Pattern)).Invoke();

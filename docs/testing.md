@@ -24,7 +24,9 @@ the credentials are test values held in memory.
 
 Covered: Simulation, Live, a late window, a slow network, a rejected password, a manual
 challenge, an owned modal dialog, changed control ids, the process exiting, no screen after
-login, an account without Live, and an unsigned target. CI runs the same scenarios.
+login, an account without Live, an unsigned target, an already signed-in environment
+screen with and without a trusted target, and pressing Live directly on an Open Account
+button. CI runs the same scenarios.
 
 An owned modal dialog is a child of its owner in the UI Automation tree, so it is not
 recognized as a modal window. The sign-in stops safely at the stage timeout instead of
