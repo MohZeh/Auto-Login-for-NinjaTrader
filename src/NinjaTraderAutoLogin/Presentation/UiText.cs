@@ -120,6 +120,9 @@ namespace NinjaTraderAutoLogin
                 case "savedRefusalKept":
                     return Choose(language, "Settings saved, but the record of the earlier refused password could not be cleared, so automatic sign-in stays on hold. Save again to retry.",
                         "تنظیمات ذخیره شد، ولی ثبتِ ردشدن قبلی رمز پاک نشد، پس ورود خودکار متوقف می‌ماند. برای تلاش دوباره، دوباره ذخیره کنید.");
+                case "savedRefusalUnchecked":
+                    return Choose(language, "Settings saved, but the record of refused passwords could not be checked, so the password will not be sent until it can be read.",
+                        "تنظیمات ذخیره شد، ولی ثبتِ رمزهای ردشده بررسی نشد، پس تا وقتی خوانده نشود، رمز ارسال نمی‌شود.");
                 case "savedShortcut":
                     return Choose(language, "Settings saved. Environment: ", "تنظیمات ذخیره شد؛ محیط معاملاتی: ") + ModeName(mode, language);
                 case "loggingIn":

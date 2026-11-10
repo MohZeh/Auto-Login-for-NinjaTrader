@@ -354,14 +354,15 @@ namespace NinjaTraderAutoLogin
             }
             settings = next;
             settingsInvalid = false;
-            bool refusalKept = false;
+            FailedClear clearing = FailedClear.Cleared;
             if (!next.CredentialsRejected && !RejectionLatch.Current.Write(RefusalState.None))
             {
                 // The new details are saved and the file is clear, but the registry record could
-                // not be confirmed clear. Keep what it still holds, and say so.
-                RefusalState kept = RefusalPolicy.KeptAfterNewPassword(before, RejectionLatch.Current.Read());
+                // not be confirmed clear. Keep what it still holds, and say what is known.
+                RefusalReading left = RejectionLatch.Current.Read();
+                RefusalState kept = RefusalPolicy.KeptAfterNewPassword(before, left);
                 HoldRefusal(kept);
-                refusalKept = kept != RefusalState.None;
+                clearing = RefusalPolicy.AfterFailedClear(kept, left);
             }
             // The path or start method may have changed, so the next check looks afresh.
             ReleaseOpenCopy();
@@ -370,7 +371,8 @@ namespace NinjaTraderAutoLogin
             pauseMenu.Enabled = next.Mode == LaunchMode.Watch;
             tray.Visible = next.Mode == LaunchMode.Watch;
             ApplyMenuLanguage();
-            SetStatus(refusalKept ? "savedRefusalKept" : next.Mode != LaunchMode.Watch ? "savedShortcut" : pause.Paused ? "paused" : "savedWatch");
+            SetStatus(clearing == FailedClear.Kept ? "savedRefusalKept" : clearing == FailedClear.Unchecked ? "savedRefusalUnchecked" :
+                next.Mode != LaunchMode.Watch ? "savedShortcut" : pause.Paused ? "paused" : "savedWatch");
         }
 
         // Language and theme apply at once and do not depend on account details.
@@ -727,9 +729,10 @@ namespace NinjaTraderAutoLogin
         }
         // With no saved password there is nothing to resend, so both records are cleared even
         // when this app's memory shows no refusal; a registry record could still be left over.
-        public void CredentialsRemoved()
+        // Returns false when the records could not be confirmed clear, so the form can say so.
+        public bool CredentialsRemoved()
         {
-            ClearRefusal("SaveCredentialsRemoved");
+            return ClearRefusal("SaveCredentialsRemoved");
         }
         public bool CredentialsRejected
         {
@@ -897,7 +900,7 @@ namespace NinjaTraderAutoLogin
         {
             get
             {
-                return settingsInvalid || statusKey == "savedRefusalKept" || (lastOutcome.HasValue && lastOutcome.Value != Outcome.Success && lastOutcome.Value != Outcome.AlreadyOpen && lastOutcome.Value != Outcome.Cancelled);
+                return settingsInvalid || statusKey == "savedRefusalKept" || statusKey == "savedRefusalUnchecked" || (lastOutcome.HasValue && lastOutcome.Value != Outcome.Success && lastOutcome.Value != Outcome.AlreadyOpen && lastOutcome.Value != Outcome.Cancelled);
             }
         }
         private void ApplyMenuLanguage()

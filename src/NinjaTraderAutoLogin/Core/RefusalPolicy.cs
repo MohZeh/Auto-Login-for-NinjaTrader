@@ -23,6 +23,15 @@ namespace NinjaTraderAutoLogin
         }
     }
 
+    // What the app can truthfully say after it tried to clear the registry record and could not
+    // confirm it: the record is clear after all, a refusal is still held, or nothing is known.
+    internal enum FailedClear
+    {
+        Cleared,
+        Kept,
+        Unchecked
+    }
+
     // The rules for holding and lifting a refusal, kept apart from storage so they can be tested.
     // They guard only the password: an environment screen that is already signed in needs no
     // password and is not held back by a refusal.
@@ -78,6 +87,18 @@ namespace NinjaTraderAutoLogin
         public static RefusalState KeptAfterNewPassword(RefusalState before, RefusalReading registry)
         {
             return registry.Readable ? registry.State : before;
+        }
+
+        // A held refusal is reported as such. Otherwise an unreadable record is reported as
+        // unchecked rather than as a plain success, without inventing a refusal.
+        public static FailedClear AfterFailedClear(RefusalState kept, RefusalReading registry)
+        {
+            if (kept != RefusalState.None)
+            {
+                return FailedClear.Kept;
+            }
+
+            return registry.Readable ? FailedClear.Cleared : FailedClear.Unchecked;
         }
     }
 }
