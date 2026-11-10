@@ -27,8 +27,12 @@ has a valid `NinjaTrader, LLC` signature. In the worker, wrappers require the sa
 before the password is read and before any text entry or button press in the target, so an
 already signed-in environment screen is covered too. A rejected password is recorded in
 the settings file and in a registry value (`RejectionLatch`); the parent also passes its
-in-memory record with each request. The worker refuses if any record holds a refusal, and
-the parent lifts it only after every record is cleared.
+in-memory record with each request. The rules live in `RefusalPolicy`: right before the
+password is read, the worker stops if any record holds a refusal (`CredentialsRejected`) or
+if the registry record cannot be read (`RefusalUnavailable`). A read counts as "not there"
+only when the parent key lists no such key; any other failure is "could not be read", which
+is never stored. The parent lifts a refusal only after both records are cleared and
+confirmed by a successful read.
 
 The worker verifies the request against the existing run record and process identity.
 The engine inspects login, submits once, selects only the requested mode once, and waits

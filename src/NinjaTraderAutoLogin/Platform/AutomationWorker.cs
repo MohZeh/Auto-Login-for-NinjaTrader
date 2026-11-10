@@ -70,13 +70,6 @@ namespace NinjaTraderAutoLogin
             return evidence.Interrupt(outcome, mode);
         }
 
-        // Any record of a refused password is enough to hold it: the parent's memory covers a
-        // save that failed, and the settings file and the registry cover a parent that restarted.
-        internal static Func<bool> Refusal(bool parentRejected, Func<bool> savedRejected)
-        {
-            return () => parentRejected || savedRejected();
-        }
-
         public static int Run(string requestPipe)
         {
             int exitCode = 1;
@@ -124,8 +117,8 @@ namespace NinjaTraderAutoLogin
                 RunEvidence evidence = RunEvidence.Continue(request.RunId, target, mode);
                 var engine = new LoginEngine(new TrustedTargetUi(new NativeLoginUi(target), settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted),
                     new TrustedTargetCredentials(settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted,
-                        new UnrejectedCredentials(Refusal(request.CredentialsRejected,
-                            () => SettingsStore.Load().CredentialsRejected || RejectionLatch.Current.Read() != RefusalState.None), new WindowsCredentials())),
+                        new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(request.CredentialsRejected,
+                            SettingsStore.Load().CredentialsRejected, RejectionLatch.Current.Read()), new WindowsCredentials())),
                     new SystemClock(), evidence, TimeSpan.FromSeconds(BuildInfo.StageTimeoutSeconds), mode);
                 LoginResult result = engine.Run(request.AlreadyRunning, CancellationToken.None);
                 var response = new WorkerResponse

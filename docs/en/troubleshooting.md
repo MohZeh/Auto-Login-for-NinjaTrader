@@ -24,6 +24,10 @@ When a sign-in cannot finish, the app stops and shows a message at the bottom of
 | *Live sign-in stopped because this NinjaTrader version was not confirmed.* | You did not confirm Live for an untested NinjaTrader version | Sign in again and confirm, or use Simulation |
 | *A NinjaTrader control was not recognized. A diagnostic report was saved.* | NinjaTrader's window looks different from what the app knows, often after a NinjaTrader update | Sign in manually and [report it](#report-a-problem) |
 | *Save your username and password to enable automatic login.* | No saved login | Enter your username and password and select **Save settings** |
+| *The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.* | NinjaTrader refused this password earlier, and the app is holding it back | See [Sign-in was rejected](#sign-in-was-rejected) |
+| *Your choice to try again could not be saved, so the password was not sent.* | The app could not record that you allowed another attempt | Wait a moment and try again; if it repeats, check that the disk is not full |
+| *The record of an earlier refused password could not be read, so the password was not sent.* | Windows did not let the app read its small registry record | Make sure your Windows user can use its registry normally, then try again |
+| *The app could not save its diagnostic report.* | The sign-in record could not be written, so the app stopped to stay safe | Check that the disk is not full, then try again |
 | *The operation could not finish. A diagnostic report was saved.* | Something unexpected happened | Try again once; if it happens again, [report it](#report-a-problem) |
 
 ## Sign-in was rejected
@@ -45,6 +49,7 @@ The saved login is not deleted automatically, because the cause may be a locked 
 | *Watching paused. More than one NinjaTrader is running; close the extra copy and resume.* | Close the extra NinjaTrader, then select **Resume watching** |
 | *Watching paused. Check NinjaTrader's path and access level.* | Check the path, run both programs as the same Windows user, then resume |
 | *Windows startup needs attention. Review the launch method and save again.* | Select the start method again and select **Save settings** |
+| *Settings saved, but the record of the earlier refused password could not be cleared, so automatic sign-in stays on hold.* | Your new details are saved. Select **Save settings** again; if it repeats, check that your Windows user can use its registry |
 
 ## Other problems
 
