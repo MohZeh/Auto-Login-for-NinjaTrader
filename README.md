@@ -21,7 +21,7 @@ The app does not place orders or enable strategies.
   NinjaTrader 8.1.8.4. On another version, Simulation continues with a notice and
   Live asks once for that version.
 - Ordinary username/password login. Additional verification requires manual attention.
-- Release candidate 0.1.0-rc.1 has direct acceptance testing for settings, icons and
+- Version 0.1.0 has direct acceptance testing for settings, icons and
   Simulation sign-in through both the dedicated shortcut and watching NinjaTrader,
   backed by matching runtime records.
 - **Live login has not been validated with a real account.** Selecting Live in the
@@ -193,6 +193,8 @@ not overwritten. Tests use fakes and workspace fixtures, without accessing the
 credential vault or a real NinjaTrader. They also drive a test window with NinjaTrader's
 control ids through real UI Automation on a private desktop. CI repeats these checks on
 Windows, and pushing a `v*` tag builds, attests and publishes the release from CI.
+With .NET SDK 10.0.403, a Release build of a release tag gives the same
+`NinjaTraderAutoLogin.exe` as the published ZIP; `./build.ps1` prints its SHA-256.
 A calculated layout check does not establish behavior on every physical monitor.
 
 The versioned ZIP includes only the runtime files, shortcut setup, this guide,
