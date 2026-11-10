@@ -26,4 +26,4 @@ $identity = [ordered]@{
     nativeAcceptance = 'NOT_ESTABLISHED_BY_BUILD'
 }
 $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $validation 'build-identity.json') -Encoding UTF8
-Write-Output ('Build complete: ' + $identity.version + '. No application UI or Native login was executed.')
+Write-Output ('Build complete: ' + $identity.version + ', application SHA-256 ' + $identity.helperSha256 + '. No application UI or Native login was executed.')

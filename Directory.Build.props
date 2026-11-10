@@ -12,6 +12,10 @@
     <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>portable</DebugType>
+    <!-- A PDB records the .NET runtime the compiler ran on, and its ID is written into the
+         exe. Release builds have none, so the same sources give the same exe on any machine.
+         The release package never included a PDB. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
     <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
