@@ -114,6 +114,8 @@ namespace NinjaTraderAutoLogin
                 settings = SettingsStore.Load();
             }
             catch { settings = new Settings(); settingsInvalid = true; statusKey = "invalid"; }
+            // The settings file may have missed a refusal that the registry kept.
+            HoldRefusal(RejectionLatch.Combine(RejectionLatch.Of(settings), RejectionLatch.Current.Read()));
             PruneEvidence();
             // Without saved settings the mode is only a default, so it must not change the startup entry.
             if (!settingsInvalid && File.Exists(Paths.Settings))
@@ -351,6 +353,11 @@ namespace NinjaTraderAutoLogin
             }
             settings = next;
             settingsInvalid = false;
+            if (!next.CredentialsRejected && !RejectionLatch.Current.Write(RefusalState.None))
+            {
+                // The file is clear but the registry still refuses; keep refusing until both agree.
+                HoldRefusal(RejectionLatch.Current.Read());
+            }
             // The path or start method may have changed, so the next check looks afresh.
             ReleaseOpenCopy();
             pause.Saved(next.Mode);
@@ -660,23 +667,45 @@ namespace NinjaTraderAutoLogin
         }
         private void ConfirmRejectedRetry()
         {
-            bool allowed = true;
+            bool allowed = true, cleared = true;
             dispatcher.Invoke((Action)delegate
             {
                 if (settings.CredentialsRejected)
                 {
                     allowed = Agrees(ConfirmationContent.RetryRejected(Language, settings.RejectionUncertain));
-                    if (allowed)
-                    {
-                        settings.CredentialsRejected = settings.RejectionUncertain = false;
-                        SaveOwnSettings("SaveRejectedRetry");
-                    }
+                    cleared = allowed && ClearRefusal("SaveRejectedRetry");
                 }
             });
             if (!allowed)
             {
                 throw new LoginProblem(Outcome.CredentialsRejected);
             }
+
+            if (!cleared)
+            {
+                throw new LoginProblem(Outcome.RefusalNotCleared);
+            }
+        }
+        // A refusal is lifted only when both records are cleared. Otherwise the app keeps
+        // refusing, which matches what the worker will read.
+        private bool ClearRefusal(string phase)
+        {
+            RefusalState before = RejectionLatch.Of(settings);
+            settings.CredentialsRejected = settings.RejectionUncertain = false;
+            bool saved = SaveOwnSettings(phase);
+            bool unlatched = RejectionLatch.Current.Write(RefusalState.None);
+            if (saved && unlatched)
+            {
+                return true;
+            }
+
+            HoldRefusal(before);
+            return false;
+        }
+        private void HoldRefusal(RefusalState state)
+        {
+            settings.CredentialsRejected = state != RefusalState.None;
+            settings.RejectionUncertain = state == RefusalState.Uncertain;
         }
         private bool SaveOwnSettings(string phase)
         {
@@ -695,8 +724,7 @@ namespace NinjaTraderAutoLogin
         {
             if (settings.CredentialsRejected)
             {
-                settings.CredentialsRejected = settings.RejectionUncertain = false;
-                SaveOwnSettings("SaveCredentialsRemoved");
+                ClearRefusal("SaveCredentialsRemoved");
             }
         }
         public bool CredentialsRejected
@@ -760,12 +788,18 @@ namespace NinjaTraderAutoLogin
             {
                 settings.CredentialsRejected = true;
                 settings.RejectionUncertain = outcome == Outcome.LoginNotAccepted;
+                // Two independent records, so one failed write cannot lose the refusal on restart.
+                bool latched = RejectionLatch.Current.Write(RejectionLatch.Of(settings));
                 if (!SaveOwnSettings("SaveCredentialsRejected"))
                 {
-                    // The refusal lives only in memory now. Watching stops until the owner acts,
-                    // so a restart cannot quietly lose it before the next NinjaTrader opens.
+                    // Watching stops until the owner acts. If the registry write failed too,
+                    // the refusal lives only in memory, so a restart must not come first.
                     pause.Fault();
                     pauseMenu.Checked = true;
+                    if (!latched)
+                    {
+                        AppFaults.Record("RefusalNotDurable", new IOException("RefusalNotDurable"));
+                    }
                 }
             }
 

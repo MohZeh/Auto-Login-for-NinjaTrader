@@ -19,7 +19,7 @@ namespace NinjaTraderAutoLogin
     {
         Success, AlreadyOpen, AuthenticationFailed, NeedsManual, UnsupportedUi,
         TimedOut, Cancelled, ProcessExited, CredentialsMissing, ModeNotConfirmed,
-        EvidenceUnavailable, AccessDenied, UnexpectedFailure, LiveAccountUnavailable, MultipleInstances, LoginNotAccepted, UntrustedTarget, LiveVersionNotConfirmed, CredentialsRejected
+        EvidenceUnavailable, AccessDenied, UnexpectedFailure, LiveAccountUnavailable, MultipleInstances, LoginNotAccepted, UntrustedTarget, LiveVersionNotConfirmed, CredentialsRejected, RefusalNotCleared
     }
 
     internal enum Stage

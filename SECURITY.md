@@ -26,8 +26,12 @@
   directly from Credential Manager when the login state requires them.
 - A password NinjaTrader rejected is not read or sent again until the user enters a new
   one or confirms another attempt, because repeated attempts can lock the account. The
-  refusal is held both in the settings file and in the running app, so a failed save
-  cannot lift it; if that save fails, watching also pauses until the user acts.
+  refusal is held in the settings file, in a registry value under
+  `HKCU\Software\NinjaTraderAutoLogin` and in the running app; any one of them holds the
+  password back, so one failed write followed by a restart cannot lift it. The refusal is
+  lifted only when every record is cleared. If the settings save fails, watching also
+  pauses until the user acts. If both writes fail, the refusal lasts only while the app
+  keeps running. The registry value exists only while a refusal is held.
 - The Live button is checked for an account-opening offer again right before it is
   pressed, so a label that changed after inspection never opens an account page.
 - The support summary copies only named fields: versions, outcome, action counts and error

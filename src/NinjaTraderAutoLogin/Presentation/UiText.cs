@@ -251,6 +251,9 @@ namespace NinjaTraderAutoLogin
                 case Outcome.CredentialsRejected:
                     return UiText.Choose(language, "The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.",
                         "ورود قبلی پذیرفته نشد، پس رمز دوباره ارسال نشد. رمز را اینجا دوباره وارد کنید.");
+                case Outcome.RefusalNotCleared:
+                    return UiText.Choose(language, "Your choice to try again could not be saved, so the password was not sent. Try again in a moment.",
+                        "انتخاب «تلاش دوباره» ذخیره نشد، پس رمز ارسال نشد. کمی بعد دوباره امتحان کنید.");
                 case Outcome.UntrustedTarget:
                     return UiText.Choose(language, "This file is not signed by NinjaTrader, so your password was not used. Check the NinjaTrader path in Settings.",
                         "این فایل امضای نینجاتریدر را ندارد و رمز شما استفاده نشد. مسیر نینجاتریدر را در تنظیمات بررسی کنید.");

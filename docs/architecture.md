@@ -25,9 +25,10 @@ unknown or invalid. An unknown version shows a notice; Live also needs one agree
 version, and an invalid version stops. The coordinator starts NinjaTrader only after its file
 has a valid `NinjaTrader, LLC` signature. In the worker, wrappers require the same signature
 before the password is read and before any text entry or button press in the target, so an
-already signed-in environment screen is covered too. The parent passes its in-memory record
-of a rejected password with each request, so the worker refuses it even if saving that
-record failed.
+already signed-in environment screen is covered too. A rejected password is recorded in
+the settings file and in a registry value (`RejectionLatch`); the parent also passes its
+in-memory record with each request. The worker refuses if any record holds a refusal, and
+the parent lifts it only after every record is cleared.
 
 The worker verifies the request against the existing run record and process identity.
 The engine inspects login, submits once, selects only the requested mode once, and waits
