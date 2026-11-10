@@ -24,7 +24,7 @@ foreach ($name in $applicationEntries) {
     New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $appOutput $name) -Destination $target
 }
-$documentEntries = @('README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md')
+$documentEntries = @('README.md', 'README.fa.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md')
 foreach ($name in $documentEntries) { Copy-Item -LiteralPath (Join-Path $ProjectRoot $name) -Destination $stage }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'setup-shortcuts.ps1') -Destination $stage
 if ((Get-FileHash -LiteralPath (Join-Path $stage 'NinjaTraderAutoLogin.exe')).Hash -ne $identity.helperSha256) {
