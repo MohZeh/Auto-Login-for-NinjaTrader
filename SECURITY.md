@@ -13,17 +13,23 @@
   be revealed through settings. This UI rule does not change the vault's access policy.
 - The app verifies the target process path, start time, session, user and integrity
   level before UI interaction. Unknown or ambiguous controls stop the operation.
-- Immediately before reading the password, the login worker asks Windows to verify the
-  target file's Authenticode signature and requires the publisher `NinjaTrader, LLC`.
-  This catches a wrong path or a replaced file. Revocation is not checked, so a sign-in
-  never waits on the network, and it does not protect a compromised Windows account.
+- Before starting NinjaTrader, before reading the password, and before typing into or
+  clicking anything in its window, the app asks Windows to verify the target file's
+  Authenticode signature and requires the publisher `NinjaTrader, LLC`. A file that fails
+  is never started or touched. This catches a wrong path or a replaced file. Revocation is
+  not checked, so a sign-in never waits on the network, and it does not protect a
+  compromised Windows account.
 - Release executables are not code-signed. Each release publishes a SHA-256 checksum and
   a GitHub build attestation that ties it to this repository's workflow.
 - The automation child runs at the same privilege level as the parent and uses a private
   inherited input/output channel containing process metadata only. It reads credentials
   directly from Credential Manager when the login state requires them.
 - A password NinjaTrader rejected is not read or sent again until the user enters a new
-  one or confirms another attempt, because repeated attempts can lock the account.
+  one or confirms another attempt, because repeated attempts can lock the account. The
+  refusal is held both in the settings file and in the running app, so a failed save
+  cannot lift it; if that save fails, watching also pauses until the user acts.
+- The Live button is checked for an account-opening offer again right before it is
+  pressed, so a label that changed after inspection never opens an account page.
 - The support summary copies only named fields: versions, outcome, action counts and error
   types. It has no username, password, file path or control detail. The diagnostics folder
   may hold system and process paths, so review its files before sharing them.

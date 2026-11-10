@@ -1162,6 +1162,33 @@ internal static partial class TestRunner
                 Require(secret.Valid && credentials.Reads == 1);
             }
         });
+        Test("Nothing is typed or clicked in a target that is not trusted", delegate
+        {
+            string checkedPath = null;
+            Func<string, bool> refuse = path => { checkedPath = path; return false; };
+            var modes = Script(new UiSnapshot { SimulationReady = true });
+            var credentials = new FakeCredentials();
+            LoginResult result = new LoginEngine(new TrustedTargetUi(modes, @"C:\NT\NinjaTrader.exe", refuse), credentials, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(true, CancellationToken.None);
+            Require(result.Outcome == Outcome.UntrustedTarget && modes.Selections == 0 && result.SimulationSelections == 0 && credentials.Reads == 0 && checkedPath == @"C:\NT\NinjaTrader.exe");
+            var login = Script(new UiSnapshot { LoginReady = true });
+            result = new LoginEngine(new TrustedTargetUi(login, "x", refuse), new FakeCredentials(), new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
+            Require(result.Outcome == Outcome.UntrustedTarget && login.Submissions == 0 && result.LoginSubmissions == 0);
+            var trusted = Script(new UiSnapshot { SimulationReady = true }, new UiSnapshot { ControlCenter = true });
+            result = new LoginEngine(new TrustedTargetUi(trusted, "x", path => true), new FakeCredentials(), new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(true, CancellationToken.None);
+            Require(result.Outcome == Outcome.Success && trusted.Selections == 1);
+        });
+        Test("A refused password stays refused if either record of it remains", delegate
+        {
+            Require(AutomationWorker.Refusal(true, () => false)());
+            Require(AutomationWorker.Refusal(false, () => true)());
+            Require(!AutomationWorker.Refusal(false, () => false)());
+            // The settings save failed, so the file still says not rejected; the parent's memory holds it.
+            var credentials = new FakeCredentials();
+            var ui = Script(new UiSnapshot { LoginReady = true });
+            var guarded = new UnrejectedCredentials(AutomationWorker.Refusal(true, () => false), credentials);
+            LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
+            Require(result.Outcome == Outcome.CredentialsRejected && credentials.Reads == 0 && ui.Submissions == 0);
+        });
         Test("Only a valid NinjaTrader publisher signature is trusted", delegate
         {
             Require(NinjaTraderSignature.IsTrustedPublisher("NinjaTrader, LLC"));

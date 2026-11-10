@@ -12,7 +12,7 @@ namespace NinjaTraderAutoLogin
         [DataMember] public int ParentId, ProcessId;
         [DataMember] public long ParentStartedTicks, ProcessStartedTicks;
         [DataMember] public string TargetPath, RunId, RequestedMode;
-        [DataMember] public bool AlreadyRunning;
+        [DataMember] public bool AlreadyRunning, CredentialsRejected;
     }
 
     [DataContract]
@@ -26,7 +26,7 @@ namespace NinjaTraderAutoLogin
     {
         public const string Command = "--automation-worker";
 
-        public static LoginResult Execute(ProcessIdentity target, bool alreadyRunning,
+        public static LoginResult Execute(ProcessIdentity target, bool alreadyRunning, bool credentialsRejected,
             TradingMode mode, RunEvidence evidence, CancellationToken cancellation)
         {
             WorkerRequest request;
@@ -41,7 +41,8 @@ namespace NinjaTraderAutoLogin
                     TargetPath = target.ImagePath,
                     RunId = evidence.RunId,
                     RequestedMode = mode.ToString(),
-                    AlreadyRunning = alreadyRunning
+                    AlreadyRunning = alreadyRunning,
+                    CredentialsRejected = credentialsRejected
                 };
             }
 
@@ -67,6 +68,13 @@ namespace NinjaTraderAutoLogin
             Outcome outcome = supervised.Reason == WorkerStopReason.Cancelled ? Outcome.Cancelled :
                 supervised.Reason == WorkerStopReason.TimedOut ? Outcome.TimedOut : Outcome.UnexpectedFailure;
             return evidence.Interrupt(outcome, mode);
+        }
+
+        // Either record of a refused password is enough to hold it: the parent's memory covers a
+        // settings save that failed, and the file covers a parent that restarted.
+        internal static Func<bool> Refusal(bool parentRejected, Func<bool> savedRejected)
+        {
+            return () => parentRejected || savedRejected();
         }
 
         public static int Run(string requestPipe)
@@ -114,9 +122,9 @@ namespace NinjaTraderAutoLogin
                     ImagePath = settings.NinjaTraderPath
                 };
                 RunEvidence evidence = RunEvidence.Continue(request.RunId, target, mode);
-                var engine = new LoginEngine(new NativeLoginUi(target),
+                var engine = new LoginEngine(new TrustedTargetUi(new NativeLoginUi(target), settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted),
                     new TrustedTargetCredentials(settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted,
-                        new UnrejectedCredentials(() => SettingsStore.Load().CredentialsRejected, new WindowsCredentials())),
+                        new UnrejectedCredentials(Refusal(request.CredentialsRejected, () => SettingsStore.Load().CredentialsRejected), new WindowsCredentials())),
                     new SystemClock(), evidence, TimeSpan.FromSeconds(BuildInfo.StageTimeoutSeconds), mode);
                 LoginResult result = engine.Run(request.AlreadyRunning, CancellationToken.None);
                 var response = new WorkerResponse

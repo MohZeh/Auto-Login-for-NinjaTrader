@@ -16,7 +16,7 @@ internal static class FakeTargetChecks
         public TradingMode Mode = TradingMode.Simulation;
         public Outcome Outcome;
         public int Submissions, Simulation, Live, TimeoutSeconds = 30;
-        public bool RequireTrust;
+        public bool RequireTrust, PressLiveDirectly;
     }
 
     private sealed class Evidence : IRunEvidence
@@ -110,7 +110,10 @@ internal static class FakeTargetChecks
             new Scenario { Name = "login-returns", Expected = "No screen follows login", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5 },
             new Scenario { Name = "no-live-account", Expected = "Live button that opens an account is never pressed", Mode = TradingMode.Live, Outcome = Outcome.LiveAccountUnavailable, Submissions = 1 },
             new Scenario { Name = "no-live-account", Expected = "Simulation on an account without Live", Outcome = Outcome.Success, Submissions = 1, Simulation = 1 },
-            new Scenario { Name = "normal", Expected = "Unsigned target never receives the password", Outcome = Outcome.UntrustedTarget, RequireTrust = true }
+            new Scenario { Name = "normal", Expected = "Unsigned target never receives the password", Outcome = Outcome.UntrustedTarget, RequireTrust = true },
+            new Scenario { Name = "modes", Expected = "A signed-in environment screen continues without the password", Outcome = Outcome.Success, Simulation = 1 },
+            new Scenario { Name = "modes", Expected = "An unsigned target's environment screen is never clicked", Outcome = Outcome.UntrustedTarget, RequireTrust = true },
+            new Scenario { Name = "modes-open-account", Expected = "Pressing Live re-checks the button and refuses Open Account", Mode = TradingMode.Live, Outcome = Outcome.LiveAccountUnavailable, PressLiveDirectly = true }
         };
         int failures = 0;
         var lines = new List<string>();
@@ -127,6 +130,30 @@ internal static class FakeTargetChecks
         Console.WriteLine(scenarios.Length + " fake-target scenarios; " + failures + " failures. This does not replace testing on a real NinjaTrader.");
         CloseDesktop(desktop);
         return failures == 0 ? 0 : 1;
+    }
+    // Skips the engine's own inspection, so only the check inside SelectMode can stop the press.
+    private static LoginResult PressLive(ILoginUi ui)
+    {
+        var result = new LoginResult { RequestedMode = TradingMode.Live };
+        DateTime deadline = DateTime.UtcNow.AddSeconds(15);
+        while (!ui.Inspect().LiveReady)
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                result.Outcome = Outcome.TimedOut;
+                return result;
+            }
+
+            Thread.Sleep(100);
+        }
+        try
+        {
+            ui.SelectMode(TradingMode.Live, CancellationToken.None);
+            result.LiveSelections = 1;
+            result.Outcome = Outcome.Success;
+        }
+        catch (LoginProblem problem) { result.Outcome = problem.Outcome; }
+        return result;
     }
     private static string RunScenario(Scenario scenario, string target, string desktop, string reportFolder)
     {
@@ -146,8 +173,12 @@ internal static class FakeTargetChecks
             ICredentials used = scenario.RequireTrust
                 ? (ICredentials)new TrustedTargetCredentials(target, NinjaTraderSignature.IsTrusted, credentials)
                 : credentials;
-            var engine = new LoginEngine(new NativeLoginUi(identity), used, new SystemClock(), new Evidence(), TimeSpan.FromSeconds(scenario.TimeoutSeconds), scenario.Mode);
-            LoginResult result = engine.Run(false, CancellationToken.None);
+            ILoginUi ui = scenario.RequireTrust
+                ? (ILoginUi)new TrustedTargetUi(new NativeLoginUi(identity), target, NinjaTraderSignature.IsTrusted)
+                : new NativeLoginUi(identity);
+            LoginResult result = scenario.PressLiveDirectly
+                ? PressLive(ui)
+                : new LoginEngine(ui, used, new SystemClock(), new Evidence(), TimeSpan.FromSeconds(scenario.TimeoutSeconds), scenario.Mode).Run(false, CancellationToken.None);
             string[] actions = File.Exists(record) ? File.ReadAllLines(record) : new string[0];
             if (result.Outcome != scenario.Outcome)
             {

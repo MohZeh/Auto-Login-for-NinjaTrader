@@ -523,6 +523,12 @@ namespace NinjaTraderAutoLogin
                     }
 
                     RequireKnownVersion(path, requestedMode);
+                    // A file that is not signed by NinjaTrader is not started at all.
+                    if (!NinjaTraderSignature.IsTrusted(path))
+                    {
+                        throw new LoginProblem(Outcome.UntrustedTarget);
+                    }
+
                     ProcessScan scan = null;
                     using (Process launched = Process.Start(new ProcessStartInfo(path) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(path) }))
                     {
@@ -561,7 +567,7 @@ namespace NinjaTraderAutoLogin
                 token.ThrowIfCancellationRequested();
                 evidence = new RunEvidence(process, explicitRequest ? "ShortcutOrLaunchButton" : "Watcher", requestedMode);
                 activeEvidence = evidence.FilePath;
-                return new OperationCompletion { Result = AutomationWorker.Execute(process, alreadyRunning, requestedMode, evidence, token), EvidencePath = evidence.FilePath, OpenCopy = alreadyRunning ? process : null };
+                return new OperationCompletion { Result = AutomationWorker.Execute(process, alreadyRunning, CredentialsRejected, requestedMode, evidence, token), EvidencePath = evidence.FilePath, OpenCopy = alreadyRunning ? process : null };
             }
             catch (Exception ex)
             {
@@ -672,13 +678,18 @@ namespace NinjaTraderAutoLogin
                 throw new LoginProblem(Outcome.CredentialsRejected);
             }
         }
-        private void SaveOwnSettings(string phase)
+        private bool SaveOwnSettings(string phase)
         {
             try
             {
                 SettingsStore.Save(settings);
+                return true;
             }
-            catch (Exception error) { AppFaults.Record(phase, error); }
+            catch (Exception error)
+            {
+                AppFaults.Record(phase, error);
+                return false;
+            }
         }
         public void CredentialsRemoved()
         {
@@ -749,7 +760,13 @@ namespace NinjaTraderAutoLogin
             {
                 settings.CredentialsRejected = true;
                 settings.RejectionUncertain = outcome == Outcome.LoginNotAccepted;
-                SaveOwnSettings("SaveCredentialsRejected");
+                if (!SaveOwnSettings("SaveCredentialsRejected"))
+                {
+                    // The refusal lives only in memory now. Watching stops until the owner acts,
+                    // so a restart cannot quietly lose it before the next NinjaTrader opens.
+                    pause.Fault();
+                    pauseMenu.Checked = true;
+                }
             }
 
             lastActionUncertain = completed.Result.ActionCompletionUncertain;
