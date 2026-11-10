@@ -115,7 +115,7 @@ namespace NinjaTraderAutoLogin
             }
             catch { settings = new Settings(); settingsInvalid = true; statusKey = "invalid"; }
             // The settings file may have missed a refusal that the registry kept.
-            HoldRefusal(RejectionLatch.Combine(RejectionLatch.Of(settings), RejectionLatch.Current.Read()));
+            HoldRefusal(RefusalPolicy.AtStartup(RefusalPolicy.Of(settings), RejectionLatch.Current.Read()));
             PruneEvidence();
             // Without saved settings the mode is only a default, so it must not change the startup entry.
             if (!settingsInvalid && File.Exists(Paths.Settings))
@@ -326,6 +326,7 @@ namespace NinjaTraderAutoLogin
             }
 
             next.Validate();
+            RefusalState before = RefusalPolicy.Of(settings);
             next.LiveAcceptedVersion = settings.LiveAcceptedVersion;
             next.CredentialsRejected = settings.CredentialsRejected && String.IsNullOrEmpty(password);
             next.RejectionUncertain = next.CredentialsRejected && settings.RejectionUncertain;
@@ -353,10 +354,14 @@ namespace NinjaTraderAutoLogin
             }
             settings = next;
             settingsInvalid = false;
+            bool refusalKept = false;
             if (!next.CredentialsRejected && !RejectionLatch.Current.Write(RefusalState.None))
             {
-                // The file is clear but the registry still refuses; keep refusing until both agree.
-                HoldRefusal(RejectionLatch.Current.Read());
+                // The new details are saved and the file is clear, but the registry record could
+                // not be confirmed clear. Keep what it still holds, and say so.
+                RefusalState kept = RefusalPolicy.KeptAfterNewPassword(before, RejectionLatch.Current.Read());
+                HoldRefusal(kept);
+                refusalKept = kept != RefusalState.None;
             }
             // The path or start method may have changed, so the next check looks afresh.
             ReleaseOpenCopy();
@@ -365,7 +370,7 @@ namespace NinjaTraderAutoLogin
             pauseMenu.Enabled = next.Mode == LaunchMode.Watch;
             tray.Visible = next.Mode == LaunchMode.Watch;
             ApplyMenuLanguage();
-            SetStatus(next.Mode != LaunchMode.Watch ? "savedShortcut" : pause.Paused ? "paused" : "savedWatch");
+            SetStatus(refusalKept ? "savedRefusalKept" : next.Mode != LaunchMode.Watch ? "savedShortcut" : pause.Paused ? "paused" : "savedWatch");
         }
 
         // Language and theme apply at once and do not depend on account details.
@@ -690,11 +695,11 @@ namespace NinjaTraderAutoLogin
         // refusing, which matches what the worker will read.
         private bool ClearRefusal(string phase)
         {
-            RefusalState before = RejectionLatch.Of(settings);
+            RefusalState before = RefusalPolicy.Of(settings);
             settings.CredentialsRejected = settings.RejectionUncertain = false;
             bool saved = SaveOwnSettings(phase);
             bool unlatched = RejectionLatch.Current.Write(RefusalState.None);
-            if (saved && unlatched)
+            if (RefusalPolicy.Lifted(saved, unlatched))
             {
                 return true;
             }
@@ -720,12 +725,11 @@ namespace NinjaTraderAutoLogin
                 return false;
             }
         }
+        // With no saved password there is nothing to resend, so both records are cleared even
+        // when this app's memory shows no refusal; a registry record could still be left over.
         public void CredentialsRemoved()
         {
-            if (settings.CredentialsRejected)
-            {
-                ClearRefusal("SaveCredentialsRemoved");
-            }
+            ClearRefusal("SaveCredentialsRemoved");
         }
         public bool CredentialsRejected
         {
@@ -789,7 +793,7 @@ namespace NinjaTraderAutoLogin
                 settings.CredentialsRejected = true;
                 settings.RejectionUncertain = outcome == Outcome.LoginNotAccepted;
                 // Two independent records, so one failed write cannot lose the refusal on restart.
-                bool latched = RejectionLatch.Current.Write(RejectionLatch.Of(settings));
+                bool latched = RejectionLatch.Current.Write(RefusalPolicy.Of(settings));
                 if (!SaveOwnSettings("SaveCredentialsRejected"))
                 {
                     // Watching stops until the owner acts. If the registry write failed too,
@@ -893,7 +897,7 @@ namespace NinjaTraderAutoLogin
         {
             get
             {
-                return settingsInvalid || (lastOutcome.HasValue && lastOutcome.Value != Outcome.Success && lastOutcome.Value != Outcome.AlreadyOpen && lastOutcome.Value != Outcome.Cancelled);
+                return settingsInvalid || statusKey == "savedRefusalKept" || (lastOutcome.HasValue && lastOutcome.Value != Outcome.Success && lastOutcome.Value != Outcome.AlreadyOpen && lastOutcome.Value != Outcome.Cancelled);
             }
         }
         private void ApplyMenuLanguage()

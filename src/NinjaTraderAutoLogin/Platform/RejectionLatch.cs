@@ -5,13 +5,6 @@ using Microsoft.Win32;
 
 namespace NinjaTraderAutoLogin
 {
-    internal enum RefusalState
-    {
-        None = 0,
-        Rejected = 1,
-        Uncertain = 2
-    }
-
     // A second, independent record of a refused password, kept in the registry. The settings
     // file holds the same fact; either one holds the password back, so one failed write,
     // followed by a restart, cannot lose the refusal. The value exists only while a refusal
@@ -21,74 +14,79 @@ namespace NinjaTraderAutoLogin
         public const string DefaultKeyPath = @"Software\NinjaTraderAutoLogin";
         private const string ValueName = "CredentialsRejected";
         public static readonly RejectionLatch Current = new RejectionLatch(DefaultKeyPath);
-        private readonly string keyPath;
+        private readonly string keyPath, parentPath, keyName;
+        private readonly Func<string, bool, RegistryKey> open;
+        private readonly Func<string, string[]> listSubKeys;
 
         public RejectionLatch(string keyPath)
+            : this(keyPath, OpenCurrentUser, ListCurrentUser)
+        {
+        }
+
+        // The two delegates let tests inject failures that access rules cannot produce.
+        internal RejectionLatch(string keyPath, Func<string, bool, RegistryKey> open, Func<string, string[]> listSubKeys)
         {
             this.keyPath = keyPath;
+            int split = keyPath.LastIndexOf('\\');
+            parentPath = keyPath.Substring(0, split);
+            keyName = keyPath.Substring(split + 1);
+            this.open = open;
+            this.listSubKeys = listSubKeys;
         }
 
-        // A certain refusal outranks an uncertain one, and either outranks none.
-        public static RefusalState Combine(RefusalState first, RefusalState second)
-        {
-            if (first == RefusalState.Rejected || second == RefusalState.Rejected)
-            {
-                return RefusalState.Rejected;
-            }
-
-            return first == RefusalState.Uncertain || second == RefusalState.Uncertain ? RefusalState.Uncertain : RefusalState.None;
-        }
-
-        public static RefusalState Of(Settings settings)
-        {
-            return !settings.CredentialsRejected ? RefusalState.None : settings.RejectionUncertain ? RefusalState.Uncertain : RefusalState.Rejected;
-        }
-
-        public RefusalState Read()
+        public RefusalReading Read()
         {
             try
             {
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyPath, false))
+                using (RegistryKey key = open(keyPath, false))
                 {
-                    object value = key == null ? null : key.GetValue(ValueName, null);
+                    if (key == null)
+                    {
+                        // Null means either "not there" or "could not be opened". Only a parent
+                        // that lists no such key counts as "not there".
+                        return Listed() ? RefusalReading.Unavailable : RefusalReading.Known(RefusalState.None);
+                    }
+
+                    object value = key.GetValue(ValueName, null);
                     if (value == null)
                     {
-                        return RefusalState.None;
+                        return RefusalReading.Known(RefusalState.None);
                     }
 
                     // Anything unexpected still counts as a refusal.
-                    return value is int && (int)value == (int)RefusalState.Uncertain ? RefusalState.Uncertain :
-                        value is int && (int)value == (int)RefusalState.None ? RefusalState.None : RefusalState.Rejected;
+                    return RefusalReading.Known(value is int && (int)value == (int)RefusalState.Uncertain ? RefusalState.Uncertain :
+                        value is int && (int)value == (int)RefusalState.None ? RefusalState.None : RefusalState.Rejected);
                 }
             }
-            catch (Exception error) when (error is SecurityException || error is UnauthorizedAccessException || error is IOException)
+            catch (Exception error) when (IsRegistryFailure(error))
             {
                 AppFaults.Record("ReadRejectionLatch", error);
-                return RefusalState.None;
+                return RefusalReading.Unavailable;
             }
         }
 
-        // Returns true only when the registry now holds exactly the requested state.
+        // Returns true only when a successful read afterwards shows exactly the requested state.
         public bool Write(RefusalState state)
         {
             try
             {
                 if (state == RefusalState.None)
                 {
-                    using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyPath, true))
+                    bool empty;
+                    using (RegistryKey key = open(keyPath, true))
                     {
                         if (key == null)
                         {
-                            return true;
+                            return !Listed();
                         }
 
                         key.DeleteValue(ValueName, false);
-                        if (key.ValueCount != 0 || key.SubKeyCount != 0)
-                        {
-                            return Read() == RefusalState.None;
-                        }
+                        empty = key.ValueCount == 0 && key.SubKeyCount == 0;
                     }
-                    Registry.CurrentUser.DeleteSubKey(keyPath, false);
+                    if (empty)
+                    {
+                        Registry.CurrentUser.DeleteSubKey(keyPath, false);
+                    }
                 }
                 else
                 {
@@ -98,12 +96,50 @@ namespace NinjaTraderAutoLogin
                     }
                 }
 
-                return Read() == state;
+                RefusalReading check = Read();
+                return check.Readable && check.State == state;
             }
-            catch (Exception error) when (error is SecurityException || error is UnauthorizedAccessException || error is IOException)
+            catch (Exception error) when (IsRegistryFailure(error))
             {
                 AppFaults.Record("WriteRejectionLatch", error);
                 return false;
+            }
+        }
+
+        // Throws when the parent cannot be listed, which the callers treat as "could not be read".
+        private bool Listed()
+        {
+            foreach (string name in listSubKeys(parentPath))
+            {
+                if (String.Equals(name, keyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsRegistryFailure(Exception error)
+        {
+            return error is SecurityException || error is UnauthorizedAccessException || error is IOException;
+        }
+
+        private static RegistryKey OpenCurrentUser(string path, bool writable)
+        {
+            return Registry.CurrentUser.OpenSubKey(path, writable);
+        }
+
+        private static string[] ListCurrentUser(string path)
+        {
+            using (RegistryKey parent = Registry.CurrentUser.OpenSubKey(path, false))
+            {
+                if (parent == null)
+                {
+                    throw new IOException("RejectionLatchParentUnavailable");
+                }
+
+                return parent.GetSubKeyNames();
             }
         }
     }

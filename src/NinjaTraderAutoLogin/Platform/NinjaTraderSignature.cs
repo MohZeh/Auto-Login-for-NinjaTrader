@@ -152,23 +152,20 @@ namespace NinjaTraderAutoLogin
     }
 
     // Repeating a refused password can lock the account, so it stays unused until the owner decides.
+    // The guard throws when a refusal is held or its record cannot be read.
     internal sealed class UnrejectedCredentials : ICredentials
     {
-        private readonly Func<bool> rejected;
+        private readonly Action requireNoRefusal;
         private readonly ICredentials credentials;
 
-        public UnrejectedCredentials(Func<bool> rejected, ICredentials credentials)
+        public UnrejectedCredentials(Action requireNoRefusal, ICredentials credentials)
         {
-            this.rejected = rejected;
+            this.requireNoRefusal = requireNoRefusal;
             this.credentials = credentials;
         }
         public Secret Read()
         {
-            if (rejected())
-            {
-                throw new LoginProblem(Outcome.CredentialsRejected);
-            }
-
+            requireNoRefusal();
             return credentials.Read();
         }
     }

@@ -117,6 +117,9 @@ namespace NinjaTraderAutoLogin
                     return Choose(language, "Watching paused. More than one NinjaTrader is running; close the extra copy and resume.", "پایش متوقف شد؛ بیش از یک نینجاتریدر در حال اجراست. نسخهٔ اضافه را ببندید و پایش را ادامه دهید.");
                 case "savedWatch":
                     return Choose(language, "Settings saved. Watching is active in the tray.", "تنظیمات ذخیره شد؛ پایش با آیکون کنار ساعت فعال است.");
+                case "savedRefusalKept":
+                    return Choose(language, "Settings saved, but the record of the earlier refused password could not be cleared, so automatic sign-in stays on hold. Save again to retry.",
+                        "تنظیمات ذخیره شد، ولی ثبتِ ردشدن قبلی رمز پاک نشد، پس ورود خودکار متوقف می‌ماند. برای تلاش دوباره، دوباره ذخیره کنید.");
                 case "savedShortcut":
                     return Choose(language, "Settings saved. Environment: ", "تنظیمات ذخیره شد؛ محیط معاملاتی: ") + ModeName(mode, language);
                 case "loggingIn":
@@ -251,6 +254,9 @@ namespace NinjaTraderAutoLogin
                 case Outcome.CredentialsRejected:
                     return UiText.Choose(language, "The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.",
                         "ورود قبلی پذیرفته نشد، پس رمز دوباره ارسال نشد. رمز را اینجا دوباره وارد کنید.");
+                case Outcome.RefusalUnavailable:
+                    return UiText.Choose(language, "The record of an earlier refused password could not be read, so the password was not sent. Check that Windows can read your user's registry, then try again.",
+                        "ثبتِ ردشدن قبلی رمز خوانده نشد، پس رمز ارسال نشد. مطمئن شوید ویندوز به رجیستری کاربر شما دسترسی دارد و دوباره امتحان کنید.");
                 case Outcome.RefusalNotCleared:
                     return UiText.Choose(language, "Your choice to try again could not be saved, so the password was not sent. Try again in a moment.",
                         "انتخاب «تلاش دوباره» ذخیره نشد، پس رمز ارسال نشد. کمی بعد دوباره امتحان کنید.");

@@ -4,9 +4,11 @@
 
 Version 0.1.0 adds embedded icons, relocation of an owned startup entry and a
 standalone shortcut script. Headless checks exercise command ownership and exact
-rollback without touching the registry; only the refusal-record check writes, to a
-temporary key under `HKCU\Software\NinjaTraderAutoLogin.Tests` that it deletes.
-Shortcut tests use workspace-only folders
+rollback without touching the registry. Only the refusal-record checks write to the
+registry, each to its own key under `HKCU\Software\NinjaTraderAutoLogin.Tests`. One check
+denies reading with a real access rule and restores it, and another injects failures that
+access rules cannot produce. A check fails if its key cannot be removed. Shortcut tests use
+workspace-only folders
 with spaces, Unicode, apostrophes and commas; they never launch the application,
 read credentials or modify the Desktop. Packaging rejects private path content
 and unexpected ZIP entries before promoting an archive to the package directory.

@@ -5,6 +5,8 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Runtime.Versioning;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -162,6 +164,69 @@ internal static partial class TestRunner
         catch (Exception ex) { check.Failure = ex.GetType().Name + ": " + ex.Message; }
         report.Checks.Add(check);
         Console.WriteLine((check.Passed ? "PASS " : "FAIL ") + name);
+    }
+    private static Outcome? Refuses(bool parentRejected, bool fileRejected, RefusalReading registry)
+    {
+        try
+        {
+            RefusalPolicy.RequireNoRefusal(parentRejected, fileRejected, registry);
+            return null;
+        }
+        catch (LoginProblem problem) { return problem.Outcome; }
+    }
+    private static bool Is(RefusalReading reading, RefusalState state)
+    {
+        return reading.Readable && reading.State == state;
+    }
+    // Each check gets its own key, and removes only that key; the shared root goes only when empty.
+    private const string TestRegistryRoot = @"Software\NinjaTraderAutoLogin.Tests";
+    private static string TestRegistryKey()
+    {
+        string path = TestRegistryRoot + @"\" + Guid.NewGuid().ToString("N");
+        Registry.CurrentUser.CreateSubKey(path).Dispose();
+        return path;
+    }
+    private static void RemoveTestRegistryKey(string path)
+    {
+        Registry.CurrentUser.DeleteSubKeyTree(path, false);
+        using (RegistryKey root = Registry.CurrentUser.OpenSubKey(TestRegistryRoot, false))
+        {
+            if (root != null && root.SubKeyCount == 0 && root.ValueCount == 0)
+            {
+                root.Dispose();
+                Registry.CurrentUser.DeleteSubKey(TestRegistryRoot, false);
+            }
+        }
+        using (RegistryKey left = Registry.CurrentUser.OpenSubKey(path, false))
+        {
+            if (left != null)
+            {
+                throw new InvalidOperationException("Test registry key was not removed: " + path);
+            }
+        }
+    }
+    // The owner keeps the right to change a key's access rules even when reading it is denied.
+    private static void ChangeAccess(string path, RegistryAccessRule rule, bool add)
+    {
+        using (RegistryKey key = Registry.CurrentUser.OpenSubKey(path, RegistryKeyPermissionCheck.ReadWriteSubTree, RegistryRights.ChangePermissions | RegistryRights.ReadPermissions))
+        {
+            if (key == null)
+            {
+                return;
+            }
+
+            RegistrySecurity security = key.GetAccessControl();
+            if (add)
+            {
+                security.AddAccessRule(rule);
+            }
+            else
+            {
+                security.RemoveAccessRule(rule);
+            }
+
+            key.SetAccessControl(security);
+        }
     }
     private static FakeUi Script(params UiSnapshot[] snapshots)
     {
@@ -739,7 +804,7 @@ internal static partial class TestRunner
         {
             bool rejected = true;
             var credentials = new FakeCredentials();
-            var guarded = new UnrejectedCredentials(() => rejected, credentials);
+            var guarded = new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(rejected, false, RefusalReading.Known(RefusalState.None)), credentials);
             var ui = Script(new UiSnapshot { LoginReady = true });
             LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
             Require(result.Outcome == Outcome.CredentialsRejected && result.LoginSubmissions == 0 && credentials.Reads == 0 && ui.Submissions == 0);
@@ -1178,60 +1243,142 @@ internal static partial class TestRunner
             result = new LoginEngine(new TrustedTargetUi(trusted, "x", path => true), new FakeCredentials(), new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(true, CancellationToken.None);
             Require(result.Outcome == Outcome.Success && trusted.Selections == 1);
         });
-        Test("A refused password stays refused if either record of it remains", delegate
+        Test("A refused password stays refused if any record of it remains", delegate
         {
-            Require(AutomationWorker.Refusal(true, () => false)());
-            Require(AutomationWorker.Refusal(false, () => true)());
-            Require(!AutomationWorker.Refusal(false, () => false)());
+            RefusalReading clear = RefusalReading.Known(RefusalState.None);
+            Require(Refuses(true, false, clear) == Outcome.CredentialsRejected);
+            Require(Refuses(false, true, clear) == Outcome.CredentialsRejected);
+            Require(Refuses(false, false, RefusalReading.Known(RefusalState.Rejected)) == Outcome.CredentialsRejected);
+            Require(Refuses(false, false, RefusalReading.Known(RefusalState.Uncertain)) == Outcome.CredentialsRejected);
+            // A known refusal is reported as such even when the registry cannot be read.
+            Require(Refuses(true, false, RefusalReading.Unavailable) == Outcome.CredentialsRejected);
+            Require(Refuses(false, false, RefusalReading.Unavailable) == Outcome.RefusalUnavailable);
+            Require(Refuses(false, false, clear) == null);
             // The settings save failed, so the file still says not rejected; the parent's memory holds it.
             var credentials = new FakeCredentials();
             var ui = Script(new UiSnapshot { LoginReady = true });
-            var guarded = new UnrejectedCredentials(AutomationWorker.Refusal(true, () => false), credentials);
+            var guarded = new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(true, false, clear), credentials);
             LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
             Require(result.Outcome == Outcome.CredentialsRejected && credentials.Reads == 0 && ui.Submissions == 0);
         });
+        Test("A refusal record that cannot be read stops only the password", delegate
+        {
+            var credentials = new FakeCredentials();
+            var login = Script(new UiSnapshot { LoginReady = true });
+            var guarded = new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(false, false, RefusalReading.Unavailable), credentials);
+            LoginResult result = new LoginEngine(login, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
+            Require(result.Outcome == Outcome.RefusalUnavailable && credentials.Reads == 0 && login.Submissions == 0 && result.LoginSubmissions == 0);
+            // An environment screen that is already signed in needs no password, so it continues.
+            var modes = Script(new UiSnapshot { SimulationReady = true }, new UiSnapshot { ControlCenter = true });
+            result = new LoginEngine(modes, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(true, CancellationToken.None);
+            Require(result.Outcome == Outcome.Success && modes.Selections == 1 && credentials.Reads == 0);
+        });
+        Test("Refusals are kept and lifted only by the stated rules", delegate
+        {
+            RefusalReading unreadable = RefusalReading.Unavailable;
+            // A refusal is lifted only when both records are cleared.
+            Require(RefusalPolicy.Lifted(true, true) && !RefusalPolicy.Lifted(true, false) && !RefusalPolicy.Lifted(false, true) && !RefusalPolicy.Lifted(false, false));
+            // Startup holds any readable refusal and does not invent one from an unreadable record.
+            Require(RefusalPolicy.AtStartup(RefusalState.None, RefusalReading.Known(RefusalState.Rejected)) == RefusalState.Rejected);
+            Require(RefusalPolicy.AtStartup(RefusalState.Uncertain, RefusalReading.Known(RefusalState.None)) == RefusalState.Uncertain);
+            Require(RefusalPolicy.AtStartup(RefusalState.None, unreadable) == RefusalState.None);
+            Require(RefusalPolicy.AtStartup(RefusalState.Rejected, unreadable) == RefusalState.Rejected);
+            // A new password saved while the registry record could not be cleared.
+            Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.Rejected, unreadable) == RefusalState.Rejected);
+            Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.Uncertain, unreadable) == RefusalState.Uncertain);
+            Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.None, unreadable) == RefusalState.None);
+            Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.None, RefusalReading.Known(RefusalState.Rejected)) == RefusalState.Rejected);
+            Require(RefusalPolicy.KeptAfterNewPassword(RefusalState.Rejected, RefusalReading.Known(RefusalState.None)) == RefusalState.None);
+            // A certain refusal outranks an uncertain one in either record.
+            Require(RefusalPolicy.Combine(RefusalState.None, RefusalState.None) == RefusalState.None);
+            Require(RefusalPolicy.Combine(RefusalState.Uncertain, RefusalState.None) == RefusalState.Uncertain);
+            Require(RefusalPolicy.Combine(RefusalState.None, RefusalState.Rejected) == RefusalState.Rejected);
+            Require(RefusalPolicy.Combine(RefusalState.Uncertain, RefusalState.Rejected) == RefusalState.Rejected);
+            Require(RefusalPolicy.Of(new Settings()) == RefusalState.None);
+            Require(RefusalPolicy.Of(new Settings { CredentialsRejected = true }) == RefusalState.Rejected);
+            Require(RefusalPolicy.Of(new Settings { CredentialsRejected = true, RejectionUncertain = true }) == RefusalState.Uncertain);
+            foreach (string language in new[] { "en", "fa" })
+            {
+                var texts = new HashSet<string>
+                {
+                    Messages.For(Outcome.RefusalUnavailable, language), Messages.For(Outcome.RefusalNotCleared, language),
+                    Messages.For(Outcome.CredentialsRejected, language), Messages.For(Outcome.UnexpectedFailure, language)
+                };
+                Require(texts.Count == 4);
+                Require(UiText.Status("savedRefusalKept", language) != UiText.Status("savedShortcut", language) &&
+                    UiText.Status("savedRefusalKept", language) != UiText.Status("ready", language));
+            }
+        });
         Test("A refused password survives a failed settings save and a restart", delegate
         {
-            const string root = @"Software\NinjaTraderAutoLogin.Tests";
-            string path = root + @"\" + Guid.NewGuid().ToString("N");
+            string path = TestRegistryKey();
             try
             {
-                var latch = new RejectionLatch(path);
-                Require(latch.Read() == RefusalState.None && latch.Write(RefusalState.Rejected));
+                var latch = new RejectionLatch(path + @"\Latch");
+                Require(Is(latch.Read(), RefusalState.None) && latch.Write(RefusalState.Rejected));
                 // The settings save failed, so the file still says not rejected. A new latch
                 // over the same key stands for the app after a restart.
                 var file = new Settings();
-                var restarted = new RejectionLatch(path);
-                Require(RejectionLatch.Combine(RejectionLatch.Of(file), restarted.Read()) == RefusalState.Rejected);
+                var restarted = new RejectionLatch(path + @"\Latch");
+                Require(RefusalPolicy.AtStartup(RefusalPolicy.Of(file), restarted.Read()) == RefusalState.Rejected);
                 var credentials = new FakeCredentials();
                 var ui = Script(new UiSnapshot { LoginReady = true });
-                var guarded = new UnrejectedCredentials(AutomationWorker.Refusal(false, () => file.CredentialsRejected || restarted.Read() != RefusalState.None), credentials);
+                var guarded = new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(false, file.CredentialsRejected, restarted.Read()), credentials);
                 LoginResult result = new LoginEngine(ui, guarded, new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(4)).Run(false, CancellationToken.None);
                 Require(result.Outcome == Outcome.CredentialsRejected && credentials.Reads == 0 && ui.Submissions == 0);
-                Require(latch.Write(RefusalState.Uncertain) && restarted.Read() == RefusalState.Uncertain);
+                Require(latch.Write(RefusalState.Uncertain) && Is(restarted.Read(), RefusalState.Uncertain));
                 // Clearing leaves nothing behind in the registry.
-                Require(latch.Write(RefusalState.None) && restarted.Read() == RefusalState.None);
-                using (RegistryKey left = Registry.CurrentUser.OpenSubKey(path))
+                Require(latch.Write(RefusalState.None) && Is(restarted.Read(), RefusalState.None));
+                using (RegistryKey left = Registry.CurrentUser.OpenSubKey(path + @"\Latch"))
                 {
                     Require(left == null);
                 }
             }
-            finally { Registry.CurrentUser.DeleteSubKeyTree(root, false); }
+            finally { RemoveTestRegistryKey(path); }
         });
-        Test("A certain refusal outranks an uncertain one in either record", delegate
+        Test("A refusal record Windows will not let the app read is never taken as clear", delegate
         {
-            Require(RejectionLatch.Combine(RefusalState.None, RefusalState.None) == RefusalState.None);
-            Require(RejectionLatch.Combine(RefusalState.Uncertain, RefusalState.None) == RefusalState.Uncertain);
-            Require(RejectionLatch.Combine(RefusalState.None, RefusalState.Rejected) == RefusalState.Rejected);
-            Require(RejectionLatch.Combine(RefusalState.Uncertain, RefusalState.Rejected) == RefusalState.Rejected);
-            Require(RejectionLatch.Of(new Settings()) == RefusalState.None);
-            Require(RejectionLatch.Of(new Settings { CredentialsRejected = true }) == RefusalState.Rejected);
-            Require(RejectionLatch.Of(new Settings { CredentialsRejected = true, RejectionUncertain = true }) == RefusalState.Uncertain);
-            foreach (string language in new[] { "en", "fa" })
+            string path = TestRegistryKey();
+            string latchPath = path + @"\Latch";
+            RegistryAccessRule deny = new RegistryAccessRule(WindowsIdentity.GetCurrent().User, RegistryRights.ReadKey, AccessControlType.Deny);
+            try
             {
-                Require(Messages.For(Outcome.RefusalNotCleared, language) != Messages.For(Outcome.CredentialsRejected, language) &&
-                    Messages.For(Outcome.RefusalNotCleared, language) != Messages.For(Outcome.UnexpectedFailure, language));
+                var latch = new RejectionLatch(latchPath);
+                Require(latch.Write(RefusalState.Rejected));
+                ChangeAccess(latchPath, deny, true);
+                // Real access rules: reading, confirming a clear and recording all fail closed.
+                Require(!latch.Read().Readable);
+                Require(!latch.Write(RefusalState.None));
+                Require(!latch.Write(RefusalState.Rejected));
+                Require(Refuses(false, false, latch.Read()) == Outcome.RefusalUnavailable);
+                ChangeAccess(latchPath, deny, false);
+                // Once Windows allows reading again, the record is back exactly as it was.
+                Require(Is(latch.Read(), RefusalState.Rejected) && latch.Write(RefusalState.None));
             }
+            finally
+            {
+                ChangeAccess(latchPath, deny, false);
+                RemoveTestRegistryKey(path);
+            }
+        });
+        Test("Registry failures that access rules cannot produce are also never taken as clear", delegate
+        {
+            const string latchPath = @"Software\NinjaTraderAutoLogin.Tests\Injected\Latch";
+            Func<string, string[]> listsLatch = parent => new[] { "Latch" };
+            Func<string, string[]> listsNothing = parent => new string[0];
+            Func<string, string[]> listFails = parent => { throw new IOException("injected"); };
+            Func<string, bool, RegistryKey> opensNothing = (key, writable) => null;
+            Func<string, bool, RegistryKey> openFails = (key, writable) => { throw new IOException("injected"); };
+            // Null while the parent lists the key means it exists but could not be opened.
+            Require(!new RejectionLatch(latchPath, opensNothing, listsLatch).Read().Readable);
+            Require(!new RejectionLatch(latchPath, opensNothing, listFails).Read().Readable);
+            Require(!new RejectionLatch(latchPath, openFails, listsNothing).Read().Readable);
+            Require(Is(new RejectionLatch(latchPath, opensNothing, listsNothing).Read(), RefusalState.None));
+            // A clear is confirmed only when the key is really absent.
+            Require(!new RejectionLatch(latchPath, opensNothing, listsLatch).Write(RefusalState.None));
+            Require(!new RejectionLatch(latchPath, opensNothing, listFails).Write(RefusalState.None));
+            Require(!new RejectionLatch(latchPath, openFails, listsNothing).Write(RefusalState.None));
+            Require(new RejectionLatch(latchPath, opensNothing, listsNothing).Write(RefusalState.None));
         });
         Test("Only a valid NinjaTrader publisher signature is trusted", delegate
         {

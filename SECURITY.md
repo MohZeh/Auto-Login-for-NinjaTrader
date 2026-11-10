@@ -29,9 +29,14 @@
   refusal is held in the settings file, in a registry value under
   `HKCU\Software\NinjaTraderAutoLogin` and in the running app; any one of them holds the
   password back, so one failed write followed by a restart cannot lift it. The refusal is
-  lifted only when every record is cleared. If the settings save fails, watching also
-  pauses until the user acts. If both writes fail, the refusal lasts only while the app
-  keeps running. The registry value exists only while a refusal is held.
+  lifted only when every record is cleared and a successful read confirms it. If the
+  registry record cannot be read, the password is not sent either; this is never stored,
+  and the next successful read decides. If the settings save fails, watching also pauses
+  until the user acts. If both writes fail, the refusal lasts only while the app keeps
+  running. The registry value exists only while a refusal is held.
+- A refusal guards only the password. An environment screen that is already signed in
+  needs no password, so the app may still select Simulation or Live there, after the same
+  signature and process checks.
 - The Live button is checked for an account-opening offer again right before it is
   pressed, so a label that changed after inspection never opens an account page.
 - The support summary copies only named fields: versions, outcome, action counts and error
