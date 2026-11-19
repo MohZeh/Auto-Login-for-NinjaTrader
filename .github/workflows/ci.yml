@@ -1,7 +1,10 @@
 name: Windows build and checks
 
 on:
+  # Pull requests run here; main runs again after each merge. Tags are checked by the
+  # release workflow, so a branch or tag push does not start a second, identical run.
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
