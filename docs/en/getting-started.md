@@ -7,7 +7,7 @@ This guide takes you from the download to your first automatic sign-in, in about
 ## Step 1: Check what you need
 
 - Windows 10 or 11, 64-bit. .NET Framework 4.8 is already included in Windows 10 version 1903 and later.
-- NinjaTrader 8, installed and working. Version 8.1.8.4 is tested.
+- NinjaTrader 8, installed and working. Versions 8.1.8.4 and 8.1.9.0 are tested; a newer version is confirmed by its first successful sign-in.
 - Your NinjaTrader username and password.
 
 **Before you continue:** read the [legal notice](../../README.md#legal-notice). This app is not made or approved by NinjaTrader, and you decide whether you may use it.
@@ -93,11 +93,11 @@ Under **NinjaTrader application**, the app fills in the usual path:
 C:\Program Files\NinjaTrader 8\bin\NinjaTrader.exe
 ```
 
-**Expected result:** a green line such as *✓ Version 8.1.8.4 · tested · signed by NinjaTrader*.
+**Expected result:** a green line such as *✓ Version 8.1.9.0 · tested · signed by NinjaTrader*.
 
 **If you see something else:**
 - *✕ This file was not found.*: select the folder icon and choose `NinjaTrader.exe` from the `bin` folder of your NinjaTrader installation.
-- *⚠ Version … has not been tested with this app.*: your NinjaTrader version is different. Simulation still works; Live asks once for this version.
+- *⚠ Version … is new · the first successful sign-in confirms it*: your NinjaTrader is newer than the versions tested with this release. Sign in as usual; once a sign-in succeeds, the line turns green (*confirmed on this PC*) and the app stops mentioning it. Until then, Live asks once for this version.
 - *✕ Not signed by NinjaTrader, so sign-in will stop.*: the file is not the original NinjaTrader program. Choose the real `NinjaTrader.exe`; the app never sends your password to an unsigned file.
 
 ## Step 9: Save

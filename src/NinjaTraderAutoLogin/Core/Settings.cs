@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
@@ -16,6 +17,8 @@ namespace NinjaTraderAutoLogin
         [DataMember] public string UiTheme = "Dark";
         // The NinjaTrader version the owner agreed to use for Live although it has not been tested.
         [DataMember(EmitDefaultValue = false)] public string LiveAcceptedVersion;
+        // NinjaTrader versions on which a complete sign-in succeeded on this computer.
+        [DataMember(EmitDefaultValue = false)] public List<string> ConfirmedVersions;
         // NinjaTrader refused the saved password; it is not sent again until the owner decides.
         [DataMember(EmitDefaultValue = false)] public bool CredentialsRejected;
         // The sign-in window only stayed open, so the cause may be the connection instead of the password.
@@ -73,6 +76,11 @@ namespace NinjaTraderAutoLogin
             }
 
             NinjaTraderPath = Path.GetFullPath(NinjaTraderPath);
+            if (ConfirmedVersions != null)
+            {
+                // A hand-edited or damaged list only loses entries; it never blocks loading.
+                ConfirmedVersions = NinjaTraderCompatibility.Remember(ConfirmedVersions, null);
+            }
         }
     }
 }

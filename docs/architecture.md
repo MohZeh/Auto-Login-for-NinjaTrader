@@ -20,9 +20,14 @@ target process, environment and run; passwords are absent from the protocol. A d
 inherited anonymous pipe carries the request, so its bytes do not depend on the console or
 system encoding; replies use the worker's redirected standard output.
 
-Before starting work, the coordinator classifies the target's file version as tested,
-unknown or invalid. An unknown version shows a notice; Live also needs one agreement per
-version, and an invalid version stops. The coordinator starts NinjaTrader only after its file
+Before starting work, the coordinator classifies the target's file version as tested (listed
+in the release), confirmed (a complete sign-in succeeded on this computer), unknown or invalid.
+After the first successful sign-in on an unknown version, the version is remembered in the
+settings (the latest five), so a new NinjaTrader release needs no app update. Until then a
+shortcut sign-in shows a quiet line in its progress window, watching shows nothing, a failed
+sign-in mentions the new version, and Live needs one agreement for that version. An invalid
+version stops. Safety does not depend on this list: unknown controls still stop the sign-in
+before any submission. The coordinator starts NinjaTrader only after its file
 has a valid `NinjaTrader, LLC` signature. In the worker, wrappers require the same signature
 before the password is read and before any text entry or button press in the target, so an
 already signed-in environment screen is covered too. A rejected password is recorded in

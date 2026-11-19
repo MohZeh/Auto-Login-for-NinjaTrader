@@ -21,7 +21,8 @@ When a sign-in cannot finish, the app stops and shows a message at the bottom of
 | *Run the app and NinjaTrader as the same Windows user and access level.* | One of them runs as administrator and the other does not | Open both normally, or both as administrator |
 | *NinjaTrader opened; the selected trading mode was not confirmed.* | Signed in, but the app could not confirm Simulation or Live | Check the environment in NinjaTrader |
 | *This login has no active Live account (Live offers Open Account).* | Your login has no Live account; NinjaTrader offers to open one | Continue in NinjaTrader's window, or switch the app to Simulation |
-| *Live sign-in stopped because this NinjaTrader version was not confirmed.* | You did not confirm Live for an untested NinjaTrader version | Sign in again and confirm, or use Simulation |
+| *Live sign-in stopped because this NinjaTrader version was not confirmed.* | You did not confirm Live for a NinjaTrader version this app has not confirmed yet | Sign in again and confirm, or sign in once with Simulation, which confirms the version |
+| A message ending *… is new for this app and not yet confirmed on this PC.* | The sign-in stopped on a NinjaTrader version this app has not seen work yet; its windows may have changed | Sign in manually, then [report it](#report-a-problem) with the support summary |
 | *A NinjaTrader control was not recognized. A diagnostic report was saved.* | NinjaTrader's window looks different from what the app knows, often after a NinjaTrader update | Sign in manually and [report it](#report-a-problem) |
 | *Save your username and password to enable automatic login.* | No saved login | Enter your username and password and select **Save settings** |
 | *The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.* | NinjaTrader refused this password earlier, and the app is holding it back | See [Sign-in was rejected](#sign-in-was-rejected) |
@@ -44,7 +45,7 @@ The saved login is not deleted automatically, because the cause may be a locked 
 | Message | What to do |
 |---|---|
 | *✕ This file was not found.* | Select the folder icon and choose `NinjaTrader.exe` from the `bin` folder of your NinjaTrader installation |
-| *⚠ Version … has not been tested with this app.* | Your NinjaTrader version differs from the tested 8.1.8.4. Simulation still works; Live asks once for this version |
+| *⚠ Version … is new · the first successful sign-in confirms it* | Your NinjaTrader is newer than the tested versions. Sign in as usual; after the first successful sign-in it shows *confirmed on this PC*. Until then, Live asks once for this version |
 | *✕ Not signed by NinjaTrader, so sign-in will stop.* | Choose the original `NinjaTrader.exe` |
 | *Watching paused. More than one NinjaTrader is running; close the extra copy and resume.* | Close the extra NinjaTrader, then select **Resume watching** |
 | *Watching paused. Check NinjaTrader's path and access level.* | Check the path, run both programs as the same Windows user, then resume |

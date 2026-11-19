@@ -1195,11 +1195,18 @@ internal static partial class TestRunner
                 }
             }
         });
-        Test("A NinjaTrader version is tested, unknown or invalid, and each has its own message", delegate
+        Test("A NinjaTrader version is tested, confirmed, unknown or invalid, and each has its own message", delegate
         {
             Require(NinjaTraderCompatibility.Classify("8.1.8.4") == NinjaTraderVersionStatus.Tested);
             Require(NinjaTraderCompatibility.Classify(" 8.1.8.4 ") == NinjaTraderVersionStatus.Tested);
-            Require(NinjaTraderCompatibility.Classify("8.1.9.0") == NinjaTraderVersionStatus.Unknown);
+            Require(NinjaTraderCompatibility.Classify("8.1.9.0") == NinjaTraderVersionStatus.Tested);
+            Require(NinjaTraderCompatibility.LatestTested == "8.1.9.0");
+            Require(NinjaTraderCompatibility.Classify("8.1.10.0") == NinjaTraderVersionStatus.Unknown);
+            Require(NinjaTraderCompatibility.Classify("8.1.10.0", new[] { "8.1.10.0" }) == NinjaTraderVersionStatus.Confirmed);
+            Require(NinjaTraderCompatibility.Classify(" 8.1.10.0 ", new[] { "8.1.10.0" }) == NinjaTraderVersionStatus.Confirmed);
+            Require(NinjaTraderCompatibility.Classify("8.1.10.0", new[] { "8.1.11.0" }) == NinjaTraderVersionStatus.Unknown);
+            // A version tested by a release stays Tested even if this computer also confirmed it.
+            Require(NinjaTraderCompatibility.Classify("8.1.9.0", new[] { "8.1.9.0" }) == NinjaTraderVersionStatus.Tested);
             foreach (string invalid in new[] { null, "", "  ", "not-a-version", "8" })
             {
                 Require(NinjaTraderCompatibility.Classify(invalid) == NinjaTraderVersionStatus.Invalid);
@@ -1212,9 +1219,12 @@ internal static partial class TestRunner
                     UiText.TargetStatus(language, new TargetInspection { Exists = true }),
                     UiText.TargetStatus(language, new TargetInspection { Exists = true, Trusted = true, Status = NinjaTraderVersionStatus.Invalid }),
                     UiText.TargetStatus(language, new TargetInspection { Exists = true, Trusted = true, Version = "8.1.8.4", Status = NinjaTraderVersionStatus.Tested }),
-                    UiText.TargetStatus(language, new TargetInspection { Exists = true, Trusted = true, Version = "8.1.9.0", Status = NinjaTraderVersionStatus.Unknown })
+                    UiText.TargetStatus(language, new TargetInspection { Exists = true, Trusted = true, Version = "8.1.10.0", Status = NinjaTraderVersionStatus.Confirmed }),
+                    UiText.TargetStatus(language, new TargetInspection { Exists = true, Trusted = true, Version = "8.1.10.0", Status = NinjaTraderVersionStatus.Unknown })
                 };
-                Require(messages.Count == 5);
+                Require(messages.Count == 6);
+                Require(UiText.UnknownVersionNotice(language, "8.1.10.0").Contains("8.1.10.0") && UiText.NewVersionHint(language, "8.1.10.0").Contains("8.1.10.0") &&
+                    UiText.UnknownVersionNotice(language, "8.1.10.0") != UiText.NewVersionHint(language, "8.1.10.0"));
                 Require(Messages.For(Outcome.UntrustedTarget, language) != Messages.For(Outcome.UnexpectedFailure, language));
                 Require(Messages.For(Outcome.LiveVersionNotConfirmed, language) != Messages.For(Outcome.UnexpectedFailure, language));
                 using (var dialog = new ConfirmationDialog(language, LiveConfirmation.UnknownVersion, "8.1.9.0"))
@@ -1416,6 +1426,34 @@ internal static partial class TestRunner
             Require(!new RejectionLatch(latchPath, opensNothing, listFails).Write(RefusalState.None));
             Require(!new RejectionLatch(latchPath, openFails, listsNothing).Write(RefusalState.None));
             Require(new RejectionLatch(latchPath, opensNothing, listsNothing).Write(RefusalState.None));
+        });
+        Test("A new NinjaTrader version is remembered after a complete sign-in, keeping only the latest few", delegate
+        {
+            List<string> list = NinjaTraderCompatibility.Remember(null, "8.1.10.0");
+            Require(list.Count == 1 && list[0] == "8.1.10.0");
+            // The same version again moves to the end instead of repeating.
+            list = NinjaTraderCompatibility.Remember(new[] { "8.1.10.0", "8.1.11.0" }, " 8.1.10.0 ");
+            Require(list.Count == 2 && list[0] == "8.1.11.0" && list[1] == "8.1.10.0");
+            // Invalid and duplicate entries are dropped; only the latest few are kept.
+            list = NinjaTraderCompatibility.Remember(new[] { "x", "8.1.1.0", "8.1.2.0", "8.1.2.0", "8.1.3.0", "8.1.4.0", "8.1.5.0" }, "8.1.6.0");
+            Require(list.Count == NinjaTraderCompatibility.RememberedVersions && list[0] == "8.1.2.0" && list[list.Count - 1] == "8.1.6.0" && !list.Contains("x"));
+            Require(NinjaTraderCompatibility.Remember(new[] { "8.1.10.0" }, null).Count == 1);
+            // Settings keep the list across a save and load, and a damaged entry never blocks loading.
+            string folder = Path.Combine(Path.GetTempPath(), "AutoLogin-versions-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                string path = Path.Combine(folder, "settings.json");
+                JsonFiles.Write(path, new Settings { NinjaTraderPath = @"C:\NT\NinjaTrader.exe", ConfirmedVersions = new List<string> { "8.1.10.0", "not a version" } });
+                Settings loaded = JsonFiles.Read<Settings>(path);
+                loaded.Validate();
+                Require(loaded.ConfirmedVersions.Count == 1 && loaded.ConfirmedVersions[0] == "8.1.10.0");
+                Require(NinjaTraderCompatibility.Classify("8.1.10.0", loaded.ConfirmedVersions) == NinjaTraderVersionStatus.Confirmed);
+                var empty = new Settings { NinjaTraderPath = @"C:\NT\NinjaTrader.exe" };
+                empty.Validate();
+                Require(empty.ConfirmedVersions == null);
+            }
+            finally { Directory.Delete(folder, true); }
         });
         Test("Only a valid NinjaTrader publisher signature is trusted", delegate
         {

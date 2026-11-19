@@ -1069,9 +1069,10 @@ namespace NinjaTraderAutoLogin
 
             string path = pathInput.Field.Text.Trim();
             int check = ++targetCheck;
+            var confirmed = owner.ConfirmedVersions;
             System.Threading.Tasks.Task.Run(delegate
             {
-                TargetInspection result = TargetInspection.Of(path);
+                TargetInspection result = TargetInspection.Of(path, confirmed);
                 try
                 {
                     BeginInvoke((Action)delegate
@@ -1089,7 +1090,8 @@ namespace NinjaTraderAutoLogin
         private void ShowTarget()
         {
             targetStatus.Text = UiText.TargetStatus(language, target);
-            targetStatus.ForeColor = target.Exists && target.Trusted && target.Status == NinjaTraderVersionStatus.Tested ? UiAssets.Simulation : UiAssets.Live;
+            targetStatus.ForeColor = target.Exists && target.Trusted &&
+                (target.Status == NinjaTraderVersionStatus.Tested || target.Status == NinjaTraderVersionStatus.Confirmed) ? UiAssets.Simulation : UiAssets.Live;
         }
         private void InspectShortcuts()
         {

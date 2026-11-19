@@ -178,6 +178,11 @@ namespace NinjaTraderAutoLogin
 
         public static TargetInspection Of(string path)
         {
+            return Of(path, null);
+        }
+
+        public static TargetInspection Of(string path, System.Collections.Generic.IEnumerable<string> confirmed)
+        {
             var result = new TargetInspection { Exists = !String.IsNullOrWhiteSpace(path) && File.Exists(path) };
             if (result.Exists)
             {
@@ -185,7 +190,7 @@ namespace NinjaTraderAutoLogin
                 result.Version = NinjaTraderCompatibility.ReadVersion(path);
             }
 
-            result.Status = NinjaTraderCompatibility.Classify(result.Version);
+            result.Status = NinjaTraderCompatibility.Classify(result.Version, confirmed);
             return result;
         }
     }

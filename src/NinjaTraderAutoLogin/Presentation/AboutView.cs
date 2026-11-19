@@ -52,7 +52,7 @@ namespace NinjaTraderAutoLogin
             parts.Add(versionTag.Name, versionTag);
             version.Controls.Add(versionTag);
             AddText("compatibilityLabel", version, T("NinjaTrader", "نینجاتریدر"));
-            AddText("compatibility", version, T("✓ " + NinjaTraderCompatibility.TestedVersion + " tested", "✓ " + NinjaTraderCompatibility.TestedVersion + " آزموده‌شده"));
+            AddText("compatibility", version, T("✓ " + NinjaTraderCompatibility.LatestTested + " tested", "✓ " + NinjaTraderCompatibility.LatestTested + " آزموده‌شده"));
             checkUpdates = AddButton("checkUpdates", version, T("Check for updates", "بررسی نسخهٔ جدید"));
             checkUpdates.Click += async delegate { await CheckUpdatesAsync(); };
             updateStatus = AddText("updateStatus", version, String.Empty);
