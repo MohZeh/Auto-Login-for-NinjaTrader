@@ -13,6 +13,12 @@ with spaces, Unicode, apostrophes and commas; they never launch the application,
 read credentials or modify the Desktop. Packaging rejects private path content
 and unexpected ZIP entries before promoting an archive to the package directory.
 
+The published `v0.1.0` executable (SHA-256 `66963588E17AEF926204A3B3496E3DB113C8F69184B8198795FF2B41F751E4DB`,
+the same file GitHub's release workflow built and attested) has Human-observed Simulation sign-in
+through both the dedicated shortcut and watching NinjaTrader, on NinjaTrader 8.1.8.4, recorded on
+2026-11-10. Other NinjaTrader versions, Live sign-in and the run records themselves are not
+part of this public claim.
+
 Human acceptance is recorded per executable hash. A login claim needs fresh records from
 that executable, each with one submission and one environment selection. Automatic
 migration of a startup entry across a physical folder move has headless policy coverage;

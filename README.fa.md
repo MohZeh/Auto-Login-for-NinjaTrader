@@ -35,10 +35,11 @@
 
 ## نصب
 
-1. فایل `NinjaTraderAutoLogin-<version>-win-x64.zip` را از صفحهٔ [Releases](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/releases) دانلود کنید و کل پوشه را در جایی ثابت از حالت فشرده خارج کنید.
-2. فایل `NinjaTraderAutoLogin.exe` را باز کنید. اگر ویندوز هشدار SmartScreen داد، **More info** و سپس **Run anyway** را بزنید.
-3. نام کاربری و رمز نینجاتریدر را وارد کنید، **سیمولیشن** یا **لایو ترید** و روش شروع را انتخاب کنید.
-4. **ذخیرهٔ تنظیمات** را بزنید. اگر روش شورتکات را انتخاب کرده‌اید، **ساخت شورتکات** را هم بزنید.
+1. فایل `NinjaTraderAutoLogin-<version>-win-x64.zip` را از صفحهٔ [Releases](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/releases) دانلود کنید.
+2. پیش از باز کردن هر فایلی، [دانلود را بررسی کنید](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/blob/main/docs/fa/getting-started.md#step-2). فایل `.sha256` نشان می‌دهد زیپ کامل و دست‌نخورده است و `gh attestation verify` نشان می‌دهد که گیت‌هاب آن را از همین مخزن ساخته است.
+3. کل پوشه را در جایی ثابت از حالت فشرده خارج کنید و `NinjaTraderAutoLogin.exe` را باز کنید. برنامه امضای دیجیتال ندارد، پس ممکن است ویندوز هشدار SmartScreen بدهد. فقط پس از موفق بودن بررسی، **More info** و سپس **Run anyway** را بزنید.
+4. نام کاربری و رمز نینجاتریدر را وارد کنید، **سیمولیشن** یا **لایو ترید** و روش شروع را انتخاب کنید.
+5. **ذخیرهٔ تنظیمات** را بزنید. اگر روش شورتکات را انتخاب کرده‌اید، **ساخت شورتکات** را هم بزنید.
 
 **[راهنمای گام‌به‌گام](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/blob/main/docs/fa/getting-started.md)** مسیر را از دانلود تا اولین ورود خودکار توضیح می‌دهد. در هر گام نوشته شده است که چه چیزی باید ببینید و اگر چیز دیگری دیدید، چه کنید.
 

@@ -28,10 +28,11 @@ Auto Login for NinjaTrader keeps your NinjaTrader password in Windows Credential
 
 ## Install
 
-1. Download `NinjaTraderAutoLogin-<version>-win-x64.zip` from [Releases](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/releases) and extract the whole folder to a permanent place.
-2. Open `NinjaTraderAutoLogin.exe`. If Windows SmartScreen warns you, select **More info**, then **Run anyway**.
-3. Enter your NinjaTrader username and password, choose **Simulation** or **Live trading**, and choose how to start.
-4. Select **Save settings**. For the dedicated shortcut, select **Create shortcut** too.
+1. Download `NinjaTraderAutoLogin-<version>-win-x64.zip` from [Releases](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/releases).
+2. Before opening anything, [check the download](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/blob/main/docs/en/getting-started.md#step-2-download-and-check-the-app). The `.sha256` file shows the ZIP is complete and unchanged; `gh attestation verify` shows that GitHub built it from this repository.
+3. Extract the whole folder to a permanent place and open `NinjaTraderAutoLogin.exe`. It is not code-signed, so Windows SmartScreen may warn you. Only after the check has passed, select **More info**, then **Run anyway**.
+4. Enter your NinjaTrader username and password, choose **Simulation** or **Live trading**, and choose how to start.
+5. Select **Save settings**. For the dedicated shortcut, select **Create shortcut** too.
 
 **[Follow the step-by-step guide](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/blob/main/docs/en/getting-started.md)**, from the download to your first automatic sign-in. Each step says what you should see and what to do if you see something else.
 
