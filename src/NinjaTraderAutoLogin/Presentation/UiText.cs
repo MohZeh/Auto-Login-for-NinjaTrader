@@ -51,8 +51,13 @@ namespace NinjaTraderAutoLogin
                 return Choose(language, "✓ Version " + target.Version + " · tested · signed by NinjaTrader", "✓ نسخهٔ " + target.Version + " · آزموده‌شده · با امضای نینجاتریدر");
             }
 
+            if (target.Status == NinjaTraderVersionStatus.Confirmed)
+            {
+                return Choose(language, "✓ Version " + target.Version + " · confirmed on this PC · signed by NinjaTrader", "✓ نسخهٔ " + target.Version + " · تأییدشده در این سیستم · با امضای نینجاتریدر");
+            }
+
             return target.Status == NinjaTraderVersionStatus.Unknown
-                ? Choose(language, "⚠ Version " + target.Version + " has not been tested with this app.", "⚠ نسخهٔ " + target.Version + " با این برنامه آزموده نشده است.")
+                ? Choose(language, "⚠ Version " + target.Version + " is new · the first successful sign-in confirms it", "⚠ نسخهٔ " + target.Version + " تازه است · اولین ورود موفق آن را تأیید می‌کند")
                 : Choose(language, "✕ This file's version could not be read.", "✕ نسخهٔ این فایل خوانده نشد.");
         }
         public static string RejectedHint(string language, bool uncertain)
@@ -69,7 +74,11 @@ namespace NinjaTraderAutoLogin
         }
         public static string UnknownVersionNotice(string language, string version)
         {
-            return Choose(language, "NinjaTrader " + version + " has not been tested with this app.", "نینجاتریدر " + version + " با این برنامه آزموده نشده است.");
+            return Choose(language, "NinjaTrader " + version + " is new for this app; a successful sign-in confirms it.", "نینجاتریدر " + version + " برای این برنامه تازه است؛ ورود موفق آن را تأیید می‌کند.");
+        }
+        public static string NewVersionHint(string language, string version)
+        {
+            return Choose(language, "NinjaTrader " + version + " is new for this app and not yet confirmed on this PC.", "نینجاتریدر " + version + " برای این برنامه تازه است و هنوز در این سیستم تأیید نشده است.");
         }
         public static string ShortcutAction(string language, ShortcutState state)
         {

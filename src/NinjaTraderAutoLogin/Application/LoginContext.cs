@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -13,6 +14,8 @@ namespace NinjaTraderAutoLogin
         public LoginResult Result;
         public string EvidencePath;
         public ProcessIdentity OpenCopy;
+        // A NinjaTrader version this app had not confirmed before this attempt.
+        public string NewVersion;
     }
 
     internal sealed class LoginContext : ApplicationContext
@@ -30,6 +33,7 @@ namespace NinjaTraderAutoLogin
         private SettingsForm form;
         private CancellationTokenSource cancellation;
         private bool active, exiting, firstTick = true, settingsInvalid;
+        private string lastNewVersion;
         private readonly MonitoringPause pause = new MonitoringPause();
         private ProcessWatch openCopy;
         private string initialCommand, statusKey = "ready";
@@ -328,6 +332,7 @@ namespace NinjaTraderAutoLogin
             next.Validate();
             RefusalState before = RefusalPolicy.Of(settings);
             next.LiveAcceptedVersion = settings.LiveAcceptedVersion;
+            next.ConfirmedVersions = settings.ConfirmedVersions;
             next.CredentialsRejected = settings.CredentialsRejected && String.IsNullOrEmpty(password);
             next.RejectionUncertain = next.CredentialsRejected && settings.RejectionUncertain;
             if (!File.Exists(next.NinjaTraderPath))
@@ -519,6 +524,7 @@ namespace NinjaTraderAutoLogin
         {
             RunEvidence evidence = null;
             bool ownsGate = false;
+            string newVersion = null;
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -536,7 +542,7 @@ namespace NinjaTraderAutoLogin
                         throw new LoginProblem(Outcome.ProcessExited);
                     }
 
-                    RequireKnownVersion(path, requestedMode);
+                    newVersion = RequireKnownVersion(path, requestedMode);
                     // A file that is not signed by NinjaTrader is not started at all.
                     if (!NinjaTraderSignature.IsTrusted(path))
                     {
@@ -569,19 +575,19 @@ namespace NinjaTraderAutoLogin
                 }
                 if (!gate.Begin(process.Key, explicitRequest))
                 {
-                    return new OperationCompletion { Result = new LoginResult { RequestedMode = requestedMode, Outcome = Outcome.Cancelled } };
+                    return new OperationCompletion { Result = new LoginResult { RequestedMode = requestedMode, Outcome = Outcome.Cancelled }, NewVersion = newVersion };
                 }
 
                 ownsGate = true;
                 if (alreadyRunning)
                 {
-                    RequireKnownVersion(path, requestedMode);
+                    newVersion = RequireKnownVersion(path, requestedMode);
                 }
 
                 token.ThrowIfCancellationRequested();
                 evidence = new RunEvidence(process, explicitRequest ? "ShortcutOrLaunchButton" : "Watcher", requestedMode);
                 activeEvidence = evidence.FilePath;
-                return new OperationCompletion { Result = AutomationWorker.Execute(process, alreadyRunning, CredentialsRejected, requestedMode, evidence, token), EvidencePath = evidence.FilePath, OpenCopy = alreadyRunning ? process : null };
+                return new OperationCompletion { Result = AutomationWorker.Execute(process, alreadyRunning, CredentialsRejected, requestedMode, evidence, token), EvidencePath = evidence.FilePath, OpenCopy = alreadyRunning ? process : null, NewVersion = newVersion };
             }
             catch (Exception ex)
             {
@@ -615,7 +621,7 @@ namespace NinjaTraderAutoLogin
                     failure.Outcome = Outcome.EvidenceUnavailable;
                     failure.ActionCompletionUncertain = true;
                 }
-                return new OperationCompletion { Result = failure, EvidencePath = evidence == null ? null : evidence.FilePath };
+                return new OperationCompletion { Result = failure, EvidencePath = evidence == null ? null : evidence.FilePath, NewVersion = newVersion };
             }
             finally
             {
@@ -627,18 +633,19 @@ namespace NinjaTraderAutoLogin
         }
 
         // Simulation may continue on an untested version with a notice. Live also needs one agreement per version.
-        private void RequireKnownVersion(string path, TradingMode requestedMode)
+        // Returns the version when this app has not confirmed it yet, otherwise null.
+        private string RequireKnownVersion(string path, TradingMode requestedMode)
         {
             string version = NinjaTraderCompatibility.ReadVersion(path);
-            NinjaTraderVersionStatus status = NinjaTraderCompatibility.Classify(version);
+            NinjaTraderVersionStatus status = NinjaTraderCompatibility.Classify(version, settings.ConfirmedVersions);
             if (status == NinjaTraderVersionStatus.Invalid)
             {
                 throw new LoginProblem(Outcome.UntrustedTarget);
             }
 
-            if (status == NinjaTraderVersionStatus.Tested)
+            if (status == NinjaTraderVersionStatus.Tested || status == NinjaTraderVersionStatus.Confirmed)
             {
-                return;
+                return null;
             }
 
             bool allowed = false;
@@ -654,6 +661,8 @@ namespace NinjaTraderAutoLogin
             {
                 throw new LoginProblem(Outcome.LiveVersionNotConfirmed);
             }
+
+            return NinjaTraderCompatibility.Normalize(version);
         }
         private bool Agrees(ConfirmationContent content)
         {
@@ -738,6 +747,13 @@ namespace NinjaTraderAutoLogin
         {
             return ClearRefusal("SaveCredentialsRemoved");
         }
+        public List<string> ConfirmedVersions
+        {
+            get
+            {
+                return settings.ConfirmedVersions == null ? new List<string>() : new List<string>(settings.ConfirmedVersions);
+            }
+        }
         public bool CredentialsRejected
         {
             get
@@ -770,17 +786,13 @@ namespace NinjaTraderAutoLogin
                 return false;
             }
         }
+        // A quiet line in the progress window. Watching shows nothing: the first complete sign-in
+        // confirms the version, and only a failed sign-in mentions it (see GetStatus).
         private void ShowVersionNotice(string version)
         {
-            string text = UiText.UnknownVersionNotice(Language, version);
             if (progress != null)
             {
-                progress.SetNotice(text);
-            }
-
-            if (tray.Visible)
-            {
-                tray.ShowBalloonTip(4000, ProductInfo.EnglishName, text, ToolTipIcon.Warning);
+                progress.SetNotice(UiText.UnknownVersionNotice(Language, version));
             }
         }
 
@@ -795,6 +807,13 @@ namespace NinjaTraderAutoLogin
             }
             Outcome outcome = completed.Result.Outcome;
             lastOutcome = outcome;
+            lastNewVersion = completed.NewVersion;
+            if (outcome == Outcome.Success && completed.NewVersion != null)
+            {
+                settings.ConfirmedVersions = NinjaTraderCompatibility.Remember(settings.ConfirmedVersions, completed.NewVersion);
+                SaveOwnSettings("SaveConfirmedVersion");
+                lastNewVersion = null;
+            }
             if ((outcome == Outcome.AuthenticationFailed || outcome == Outcome.LoginNotAccepted) && completed.Result.LoginSubmissions > 0 && !settingsInvalid)
             {
                 settings.CredentialsRejected = true;
@@ -885,6 +904,7 @@ namespace NinjaTraderAutoLogin
         {
             statusKey = key;
             lastOutcome = null;
+            lastNewVersion = null;
             lastActionUncertain = false;
             if (form != null && !form.IsDisposed)
             {
@@ -898,7 +918,14 @@ namespace NinjaTraderAutoLogin
                 return UiText.Choose(language, "Login stopped. Check NinjaTrader before trying again.", "ورود متوقف شد؛ پیش از تلاش دوباره، وضعیت نینجاتریدر را بررسی کنید.");
             }
 
-            return lastOutcome.HasValue ? Messages.For(lastOutcome.Value, language, lastTradingMode) : UiText.Status(statusKey, language, statusKey == "loggingIn" ? lastTradingMode : settings.TradingSelection);
+            if (lastOutcome.HasValue)
+            {
+                string message = Messages.For(lastOutcome.Value, language, lastTradingMode);
+                bool failed = lastOutcome.Value != Outcome.Success && lastOutcome.Value != Outcome.AlreadyOpen && lastOutcome.Value != Outcome.Cancelled;
+                return failed && lastNewVersion != null ? message + " " + UiText.NewVersionHint(language, lastNewVersion) : message;
+            }
+
+            return UiText.Status(statusKey, language, statusKey == "loggingIn" ? lastTradingMode : settings.TradingSelection);
         }
         public bool StatusIsError
         {

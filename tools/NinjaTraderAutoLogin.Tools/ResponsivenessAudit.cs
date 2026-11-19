@@ -143,6 +143,7 @@ internal static class ResponsivenessAudit
             new TargetInspection { Exists = true },
             new TargetInspection { Exists = true, Trusted = true, Version = "8.1.8.4", Status = NinjaTraderVersionStatus.Tested },
             new TargetInspection { Exists = true, Trusted = true, Version = "8.1.10.12", Status = NinjaTraderVersionStatus.Unknown },
+            new TargetInspection { Exists = true, Trusted = true, Version = "8.1.10.12", Status = NinjaTraderVersionStatus.Confirmed },
             new TargetInspection { Exists = true, Trusted = true, Status = NinjaTraderVersionStatus.Invalid }
         })
         {

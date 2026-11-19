@@ -65,7 +65,7 @@ Auto Login for NinjaTrader keeps your NinjaTrader password in Windows Credential
 | Item | Requirement |
 |---|---|
 | Windows | Windows 10 or 11, 64-bit, with .NET Framework 4.8 (included in Windows 10 version 1903 and later) |
-| NinjaTrader | NinjaTrader 8, installed separately and signed by NinjaTrader, LLC. Tested on **8.1.8.4**. On another version, Simulation continues with a notice and Live asks once for that version. |
+| NinjaTrader | NinjaTrader 8, installed separately and signed by NinjaTrader, LLC. Tested on **8.1.8.4** and **8.1.9.0**. A newer version needs no app update: the first successful sign-in confirms it on your computer, and until then Live asks once for that version. |
 | Sign-in | Ordinary username and password. Additional verification needs you to finish it in NinjaTrader's window. |
 | Live | **Not yet tested with a real account.** Selecting Live in the app is not a claim that Live works. If NinjaTrader's Live option offers to open an account, the app stops without selecting it. |
 
