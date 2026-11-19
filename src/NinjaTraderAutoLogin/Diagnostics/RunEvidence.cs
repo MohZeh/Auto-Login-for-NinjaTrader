@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,6 +14,7 @@ namespace NinjaTraderAutoLogin
     {
         [DataMember] public string Utc, Stage, Action;
         [DataMember] public List<ControlEvidence> Controls;
+        [DataMember(EmitDefaultValue = false)] public List<WindowEvidence> Windows;
     }
 
     [DataContract]
@@ -28,6 +31,11 @@ namespace NinjaTraderAutoLogin
         [DataMember] public bool ActionCompletionUncertain;
         [DataMember] public string CauseType;
         [DataMember] public int CauseHResult;
+        // Where the error came from, as method names only, for example
+        // "Process.GetProcessById < NativeLoginUi.Windows".
+        [DataMember(EmitDefaultValue = false)] public string CauseSite;
+        // How many NinjaTrader processes were running when NinjaTrader seemed to close.
+        [DataMember(EmitDefaultValue = false)] public int? NinjaTraderInstancesAtStop;
         [DataMember] public List<EvidenceEvent> Events = new List<EvidenceEvent>();
     }
 
@@ -71,6 +79,10 @@ namespace NinjaTraderAutoLogin
                 {
                     signature.Append(item.AutomationId).Append(item.ControlType).Append(item.Enabled).Append(item.Offscreen).Append(item.ValuePattern).Append(item.InvokePattern);
                 }
+                foreach (WindowEvidence item in snapshot.Windows)
+                {
+                    signature.Append('|').Append(item.ClassName).Append(item.AutomationId).Append(item.Modal).Append(item.Offscreen).Append(item.Nested);
+                }
 
                 string next = stage.ToString() + signature.ToString();
                 if (next == lastMetadata)
@@ -85,7 +97,8 @@ namespace NinjaTraderAutoLogin
                 Utc = DateTime.UtcNow.ToString("o"),
                 Stage = stage.ToString(),
                 Action = action,
-                Controls = snapshot == null ? null : snapshot.Controls
+                Controls = snapshot == null ? null : snapshot.Controls,
+                Windows = snapshot == null || snapshot.Windows.Count == 0 ? null : snapshot.Windows
             });
             return Persist();
         }
@@ -94,14 +107,59 @@ namespace NinjaTraderAutoLogin
             ApplyCause(record, error);
         }
 
-        // Type and code only: exception messages can contain paths or other private text.
+        // Type, code and method names only: exception messages can contain paths or other private text.
         internal static void ApplyCause(RunRecord value, Exception error)
         {
             if (error != null)
             {
                 value.CauseType = error.GetType().FullName;
                 value.CauseHResult = error.HResult;
+                value.CauseSite = SiteOf(error);
             }
+        }
+
+        // The method that threw, and the first method of this app on the way there. No file
+        // names or line numbers are read.
+        internal static string SiteOf(Exception error)
+        {
+            StackFrame[] frames = new StackTrace(error, false).GetFrames();
+            if (frames == null || frames.Length == 0)
+            {
+                return null;
+            }
+
+            string thrown = MethodName(frames[0].GetMethod());
+            Assembly app = typeof(RunEvidence).Assembly;
+            foreach (StackFrame frame in frames)
+            {
+                MethodBase method = frame.GetMethod();
+                if (method != null && method.DeclaringType != null && method.DeclaringType.Assembly == app)
+                {
+                    string ours = MethodName(method);
+                    string site = ours == thrown ? thrown : thrown + " < " + ours;
+                    return site.Length > 200 ? site.Substring(0, 200) : site;
+                }
+            }
+
+            return thrown.Length > 200 ? thrown.Substring(0, 200) : thrown;
+        }
+
+        private static string MethodName(MethodBase method)
+        {
+            if (method == null)
+            {
+                return "?";
+            }
+
+            return method.DeclaringType == null ? method.Name : method.DeclaringType.Name + "." + method.Name;
+        }
+
+        // Records how many NinjaTrader processes were running when the target seemed to close,
+        // to tell an exit from a restart or a second copy. Only for a record this object owns.
+        public bool Instances(int count)
+        {
+            record.NinjaTraderInstancesAtStop = count;
+            return Persist();
         }
         public bool Complete(Outcome outcome, int loginSubmissions, int simulationSelections, int liveSelections = 0)
         {

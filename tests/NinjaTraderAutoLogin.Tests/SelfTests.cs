@@ -772,6 +772,31 @@ internal static partial class TestRunner
             // The duty concerns NinjaTrader's license, not this app's own MIT license.
             Require(UiText.LegalNotice("en").Contains("NinjaTrader's license") && UiText.LegalNotice("fa").Contains("قوانین مجوز نینجاتریدر"));
         });
+        Test("A recorded cause names methods only, never files, lines or messages", delegate
+        {
+            // Thrown inside a framework method, reached from this app's own code.
+            Exception thrown = null;
+            try
+            {
+                new RejectionLatch("NoParentSeparator");
+            }
+            catch (ArgumentOutOfRangeException error) { thrown = error; }
+            string site = RunEvidence.SiteOf(thrown);
+            Require(site != null && site.StartsWith("String.", StringComparison.Ordinal) && site.EndsWith(" < RejectionLatch..ctor", StringComparison.Ordinal));
+            var record = new RunRecord();
+            RunEvidence.ApplyCause(record, thrown);
+            Require(record.CauseSite == site && record.CauseType == typeof(ArgumentOutOfRangeException).FullName);
+            // Thrown from a framework call outside this app's code: only that method is named.
+            try
+            {
+                System.Diagnostics.Process.GetProcessById(-1);
+            }
+            catch (ArgumentException error) { thrown = error; }
+            site = RunEvidence.SiteOf(thrown);
+            Require(site != null && site.Contains("GetProcessById") && site.IndexOf('\\') < 0 && site.IndexOf(':') < 0 && site.IndexOf('/') < 0);
+            // An exception that was never thrown has no site.
+            Require(RunEvidence.SiteOf(new InvalidOperationException("never thrown")) == null);
+        });
         Test("A support summary never contains account details or file paths", delegate
         {
             string folder = Path.Combine(Path.GetTempPath(), "AutoLogin-summary-" + Guid.NewGuid().ToString("N"));
@@ -789,11 +814,14 @@ internal static partial class TestRunner
                     NinjaTraderVersion = "8.1.8.4",
                     CauseType = "System.TimeoutException",
                     CauseHResult = 5,
+                    CauseSite = "Process.GetProcessById < NativeLoginUi.Windows",
+                    NinjaTraderInstancesAtStop = 2,
                     LoginSubmissions = 1
                 });
                 JsonFiles.Write(Path.Combine(folder, "app-fault-1.json"), new AppFaultRecord { Utc = "2026-11-05T00:12:00Z", Phase = "Worker", ExceptionType = "System.IO.IOException", HResult = 7, Frames = new List<string> { @"D:\PrivateName\file.cs" } });
                 string text = SupportSummary.Build(folder, "0.1.0", "Windows 11");
                 Require(text.Contains("8.1.8.4") && text.Contains("UnexpectedFailure") && text.Contains("System.TimeoutException") && text.Contains("System.IO.IOException"));
+                Require(text.Contains("at Process.GetProcessById < NativeLoginUi.Windows") && text.Contains("NinjaTrader processes 2"));
                 Require(!text.Contains("PrivateName") && !text.Contains(@"D:\") && !text.Contains(folder));
                 File.WriteAllText(Path.Combine(folder, "run-20261106-000000-000-00000000.json"), "not json");
                 Require(SupportSummary.Build(folder, "0.1.0", "Windows 11").Contains("UnexpectedFailure"));

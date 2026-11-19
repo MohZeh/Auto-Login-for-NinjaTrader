@@ -121,6 +121,10 @@ namespace NinjaTraderAutoLogin
                             SettingsStore.Load().CredentialsRejected, RejectionLatch.Current.Read()), new WindowsCredentials())),
                     new SystemClock(), evidence, TimeSpan.FromSeconds(BuildInfo.StageTimeoutSeconds), mode);
                 LoginResult result = engine.Run(request.AlreadyRunning, CancellationToken.None);
+                if (result.Outcome == Outcome.ProcessExited)
+                {
+                    evidence.Instances(ProcessScan.Count());
+                }
                 var response = new WorkerResponse
                 {
                     Candidate = BuildInfo.Version,

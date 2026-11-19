@@ -35,7 +35,9 @@ namespace NinjaTraderAutoLogin
                 }
                 text.AppendLine(String.Format(CultureInfo.InvariantCulture, "- {0} {1} {2}: {3}, submitted {4}, Simulation {5}, Live {6}{7}",
                     run.StartedUtc, run.Trigger, run.RequestedMode, run.Outcome, run.LoginSubmissions, run.SimulationSelections, run.LiveSelections,
-                    run.CauseType == null ? String.Empty : ", " + run.CauseType + " 0x" + run.CauseHResult.ToString("X8", CultureInfo.InvariantCulture)));
+                    run.CauseType == null ? String.Empty : ", " + run.CauseType + " 0x" + run.CauseHResult.ToString("X8", CultureInfo.InvariantCulture) +
+                        (run.CauseSite == null ? String.Empty : " at " + run.CauseSite) +
+                        (run.NinjaTraderInstancesAtStop.HasValue ? ", NinjaTrader processes " + run.NinjaTraderInstancesAtStop.Value.ToString(CultureInfo.InvariantCulture) : String.Empty)));
             }
             if (!wroteVersion)
             {
