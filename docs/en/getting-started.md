@@ -12,16 +12,30 @@ This guide takes you from the download to your first automatic sign-in, in about
 
 **Before you continue:** read the [legal notice](../../README.md#legal-notice). This app is not made or approved by NinjaTrader, and you decide whether you may use it.
 
-## Step 2: Download the app
+## Step 2: Download and check the app
 
 1. Open [Releases](https://github.com/MohZeh/Auto-Login-for-NinjaTrader/releases).
-2. Under **Assets** of the newest version, select `NinjaTraderAutoLogin-<version>-win-x64.zip`.
+2. Under **Assets** of the newest version, download `NinjaTraderAutoLogin-<version>-win-x64.zip` and `NinjaTraderAutoLogin-<version>-win-x64.zip.sha256`.
 
-**To check the download (optional):** the release also has a `.sha256` file. In PowerShell, run the command below in your Downloads folder and compare the result with that file.
+**Check the download before you open anything.** The app is not code-signed, so these checks are how you know what you are about to run.
+
+**Is the file complete and unchanged?** In PowerShell, in your Downloads folder, run:
 
 ```powershell
 Get-FileHash .\NinjaTraderAutoLogin-<version>-win-x64.zip
 ```
+
+**Expected result:** the `Hash` shown is the same as the first word in the `.sha256` file. This catches a damaged or swapped download, but it does not prove who made the file: both files come from the same page.
+
+**Was it built by this project?** With the [GitHub CLI](https://cli.github.com/) installed, run:
+
+```powershell
+gh attestation verify .\NinjaTraderAutoLogin-<version>-win-x64.zip --repo MohZeh/Auto-Login-for-NinjaTrader
+```
+
+**Expected result:** `Verification succeeded!`. This is a signed record from GitHub that this repository's release workflow built the ZIP from its published source.
+
+**If either check fails:** do not open the app. Delete the download and get it again from the Releases page.
 
 ## Step 3: Extract the folder to a permanent place
 
@@ -36,7 +50,7 @@ Get-FileHash .\NinjaTraderAutoLogin-<version>-win-x64.zip
 
 Double-click `NinjaTraderAutoLogin.exe`.
 
-**If Windows shows "Windows protected your PC":** the app is not code-signed, so Windows SmartScreen does not recognize it. If you trust this source, select **More info**, then **Run anyway**. Windows asks only the first time.
+**If Windows shows "Windows protected your PC":** the app is not code-signed, so Windows SmartScreen does not recognize it. Only after the checks in step 2 have passed, select **More info**, then **Run anyway**. Windows asks only the first time.
 
 **Expected result:** the **Setup** page opens. It is in Persian when Windows uses Persian and in English otherwise. Use **FA** or **EN** at the top to change the language, and the sun or moon icon to change the theme.
 
