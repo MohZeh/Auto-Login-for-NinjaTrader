@@ -69,7 +69,7 @@ Auto Login for NinjaTrader keeps your NinjaTrader password in Windows Credential
 | Sign-in | Ordinary username and password. Additional verification needs you to finish it in NinjaTrader's window. |
 | Live | **Not yet tested with a real account.** Selecting Live in the app is not a claim that Live works. If NinjaTrader's Live option offers to open an account, the app stops without selecting it. |
 
-Version 0.1.0 has direct acceptance testing for settings, icons and Simulation sign-in through both the dedicated shortcut and watching NinjaTrader, backed by matching runtime records.
+Version 0.1.1 has direct acceptance testing for settings, icons and Simulation sign-in on NinjaTrader 8.1.8.4 and 8.1.9.0, through both the dedicated shortcut and watching NinjaTrader, backed by matching runtime records.
 
 ## Privacy and security
 
