@@ -39,8 +39,10 @@
   signature and process checks.
 - The Live button is checked for an account-opening offer again right before it is
   pressed, so a label that changed after inspection never opens an account page.
-- The support summary copies only named fields: versions, outcome, action counts and error
-  types. It has no username, password, file path or control detail. The diagnostics folder
+- The support summary copies only named fields: versions, outcome, action counts, error
+  types, where an error came from as method names, and how many NinjaTrader processes were
+  running when NinjaTrader seemed to close. It has no username, password, file path or
+  control detail. The diagnostics folder
   may hold system and process paths, so review its files before sharing them.
 - Cancellation or the outer watchdog terminates only the app's automation child.
   It does not terminate NinjaTrader. If the last external action may have completed,

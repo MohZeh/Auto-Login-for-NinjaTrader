@@ -23,6 +23,17 @@ namespace NinjaTraderAutoLogin
         {
             return Multiple ? new LoginProblem(Outcome.MultipleInstances) : new LoginProblem(Outcome.AccessDenied, Unreadable);
         }
+        // Every running NinjaTrader process, whatever its path; used only for diagnostics.
+        public static int Count()
+        {
+            Process[] processes = System.Diagnostics.Process.GetProcessesByName("NinjaTrader");
+            foreach (Process process in processes)
+            {
+                process.Dispose();
+            }
+
+            return processes.Length;
+        }
         public static ProcessScan Find(string path)
         {
             var scan = new ProcessScan();

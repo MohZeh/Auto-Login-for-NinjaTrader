@@ -16,13 +16,19 @@ internal static class FakeTargetChecks
         public TradingMode Mode = TradingMode.Simulation;
         public Outcome Outcome;
         public int Submissions, Simulation, Live, TimeoutSeconds = 30;
-        public bool RequireTrust, PressLiveDirectly;
+        public bool RequireTrust, PressLiveDirectly, OwnedDialog;
     }
 
     private sealed class Evidence : IRunEvidence
     {
+        public bool SawOwnedWindow;
         public bool Event(Stage stage, string action, UiSnapshot snapshot)
         {
+            if (snapshot != null && snapshot.Windows.Exists(window => window.Nested))
+            {
+                SawOwnedWindow = true;
+            }
+
             return true;
         }
         public void Cause(Exception error)
@@ -104,7 +110,7 @@ internal static class FakeTargetChecks
             new Scenario { Name = "slow-network", Expected = "Delay after login is not a second submission", Outcome = Outcome.Success, Submissions = 1, Simulation = 1 },
             new Scenario { Name = "rejected", Expected = "Rejected password", Outcome = Outcome.AuthenticationFailed, Submissions = 1 },
             new Scenario { Name = "challenge", Expected = "Manual challenge stops before the password is used", Outcome = Outcome.NeedsManual },
-            new Scenario { Name = "dialog-after-login", Expected = "Owned modal dialog stops safely at the timeout", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5 },
+            new Scenario { Name = "dialog-after-login", Expected = "Owned modal dialog stops safely at the timeout and is recorded by type", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5, OwnedDialog = true },
             new Scenario { Name = "changed-controls", Expected = "Changed control ids stop without submitting", Outcome = Outcome.TimedOut, TimeoutSeconds = 5 },
             new Scenario { Name = "exit-after-login", Expected = "NinjaTrader exits during sign-in", Outcome = Outcome.ProcessExited, Submissions = 1 },
             new Scenario { Name = "login-returns", Expected = "No screen follows login", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5 },
@@ -176,13 +182,19 @@ internal static class FakeTargetChecks
             ILoginUi ui = scenario.RequireTrust
                 ? (ILoginUi)new TrustedTargetUi(new NativeLoginUi(identity), target, NinjaTraderSignature.IsTrusted)
                 : new NativeLoginUi(identity);
+            var recorded = new Evidence();
             LoginResult result = scenario.PressLiveDirectly
                 ? PressLive(ui)
-                : new LoginEngine(ui, used, new SystemClock(), new Evidence(), TimeSpan.FromSeconds(scenario.TimeoutSeconds), scenario.Mode).Run(false, CancellationToken.None);
+                : new LoginEngine(ui, used, new SystemClock(), recorded, TimeSpan.FromSeconds(scenario.TimeoutSeconds), scenario.Mode).Run(false, CancellationToken.None);
             string[] actions = File.Exists(record) ? File.ReadAllLines(record) : new string[0];
             if (result.Outcome != scenario.Outcome)
             {
                 return "outcome " + result.Outcome + ", expected " + scenario.Outcome;
+            }
+
+            if (scenario.OwnedDialog && !recorded.SawOwnedWindow)
+            {
+                return "the owned dialog was not recorded";
             }
 
             if (result.LoginSubmissions != scenario.Submissions || result.SimulationSelections != scenario.Simulation || result.LiveSelections != scenario.Live)

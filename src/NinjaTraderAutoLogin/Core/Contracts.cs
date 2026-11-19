@@ -84,6 +84,17 @@ namespace NinjaTraderAutoLogin
         [DataMember] public bool InvokePattern;
     }
 
+    // A window of the target, by type only. Titles and text are never read.
+    [DataContract]
+    internal sealed class WindowEvidence
+    {
+        [DataMember] public string ClassName;
+        [DataMember] public string AutomationId;
+        [DataMember] public bool Modal;
+        [DataMember] public bool Offscreen;
+        [DataMember] public bool Nested;
+    }
+
     internal sealed class UiSnapshot
     {
         public bool LoginReady;
@@ -95,6 +106,7 @@ namespace NinjaTraderAutoLogin
         public bool ManualRequired;
         public bool Ambiguous;
         public List<ControlEvidence> Controls = new List<ControlEvidence>();
+        public List<WindowEvidence> Windows = new List<WindowEvidence>();
     }
 
     internal interface ILoginUi

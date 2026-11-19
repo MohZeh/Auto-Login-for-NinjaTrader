@@ -59,6 +59,47 @@ namespace NinjaTraderAutoLogin
             return result;
         }
 
+        // The target's windows by type only, including a dialog owned by one of them, which
+        // UI Automation lists as its child. No titles or text are read.
+        private static List<WindowEvidence> Describe(List<AutomationElement> windows)
+        {
+            var result = new List<WindowEvidence>();
+            var windowType = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window);
+            foreach (AutomationElement window in windows)
+            {
+                if (result.Count >= 16)
+                {
+                    break;
+                }
+
+                result.Add(DescribeOne(window, false));
+                foreach (AutomationElement owned in window.FindAll(TreeScope.Children, windowType))
+                {
+                    if (result.Count >= 16)
+                    {
+                        break;
+                    }
+
+                    result.Add(DescribeOne(owned, true));
+                }
+            }
+
+            return result;
+        }
+
+        private static WindowEvidence DescribeOne(AutomationElement window, bool nested)
+        {
+            object pattern;
+            return new WindowEvidence
+            {
+                ClassName = window.Current.ClassName,
+                AutomationId = window.Current.AutomationId,
+                Offscreen = window.Current.IsOffscreen,
+                Modal = window.TryGetCurrentPattern(WindowPattern.Pattern, out pattern) && ((WindowPattern)pattern).Current.IsModal,
+                Nested = nested
+            };
+        }
+
         private List<AutomationElement> Find(string id, List<AutomationElement> windows)
         {
             var result = new List<AutomationElement>();
@@ -201,6 +242,8 @@ namespace NinjaTraderAutoLogin
                 {
                     return snapshot;
                 }
+
+                snapshot.Windows = Describe(windows);
 
                 snapshot.LiveAccountUnavailable = snapshot.LiveReady && OffersAccountCreation(windows);
                 foreach (AutomationElement window in windows)

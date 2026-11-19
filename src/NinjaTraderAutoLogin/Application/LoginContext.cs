@@ -596,6 +596,10 @@ namespace NinjaTraderAutoLogin
                     {
                         evidence = new RunEvidence(new ProcessIdentity { Id = 0, StartedUtcTicks = 0, ImagePath = path, Version = "Unresolved" }, explicitRequest ? "ShortcutOrLaunchButton" : "Watcher", requestedMode);
                         evidence.Cause(cause);
+                        if (outcome == Outcome.ProcessExited)
+                        {
+                            evidence.Instances(ProcessScan.Count());
+                        }
                         if (!evidence.Complete(outcome, 0, 0))
                         {
                             failure.Outcome = Outcome.EvidenceUnavailable;

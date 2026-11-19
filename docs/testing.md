@@ -40,7 +40,9 @@ button. CI runs the same scenarios.
 
 An owned modal dialog is a child of its owner in the UI Automation tree, so it is not
 recognized as a modal window. The sign-in stops safely at the stage timeout instead of
-showing the manual-attention message.
+showing the manual-attention message. Run records list the target's windows by type
+(class, automation id, modal, owned) without titles or text, so such a dialog is visible
+afterwards; the fake-target scenario checks that it is recorded.
 
 These scenarios do not cover the login worker process, Windows Credential Manager or real
 NinjaTrader behavior, and they do not replace Human acceptance.
