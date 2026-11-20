@@ -46,6 +46,10 @@ answer the worker saw to the end keeps it. A stop of the parent or worker theref
 an uncertain refusal that the next attempt finds, even after a restart.
 
 The worker verifies the request against the existing run record and process identity.
+It writes that record after each step while the app reads it for the progress window.
+Readers share delete, so the worker's atomic replace goes ahead during a read, and a
+replace that another program blocks is retried briefly. A write that still fails stops
+the sign-in before the next action, as evidence unavailable, and leaves a fault record.
 The engine inspects login, submits once, selects only the requested mode once, and waits
 for the main surface. Existing authenticated mode dialogs can be continued; an already-open
 main surface does not count as a fresh mode selection. A Live button that offers account
