@@ -21,12 +21,13 @@ internal static class FakeTargetChecks
 
     private sealed class Evidence : IRunEvidence
     {
-        public bool SawOwnedWindow;
+        public bool SawOwnedWindow, SawOwnedModal;
         public bool Event(Stage stage, string action, UiSnapshot snapshot)
         {
             if (snapshot != null && snapshot.Windows.Exists(window => window.Nested))
             {
                 SawOwnedWindow = true;
+                SawOwnedModal |= snapshot.Windows.Exists(window => window.Nested && window.Modal);
             }
 
             return true;
@@ -110,7 +111,7 @@ internal static class FakeTargetChecks
             new Scenario { Name = "slow-network", Expected = "Delay after login is not a second submission", Outcome = Outcome.Success, Submissions = 1, Simulation = 1 },
             new Scenario { Name = "rejected", Expected = "Rejected password", Outcome = Outcome.AuthenticationFailed, Submissions = 1 },
             new Scenario { Name = "challenge", Expected = "Manual challenge stops before the password is used", Outcome = Outcome.NeedsManual },
-            new Scenario { Name = "dialog-after-login", Expected = "Owned modal dialog stops safely at the timeout and is recorded by type", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5, OwnedDialog = true },
+            new Scenario { Name = "dialog-after-login", Expected = "Owned modal dialog asks for attention before the timeout and is recorded by type", Outcome = Outcome.NeedsManual, Submissions = 1, OwnedDialog = true },
             new Scenario { Name = "changed-controls", Expected = "Changed control ids stop without submitting", Outcome = Outcome.TimedOut, TimeoutSeconds = 5 },
             new Scenario { Name = "exit-after-login", Expected = "NinjaTrader exits during sign-in", Outcome = Outcome.ProcessExited, Submissions = 1 },
             new Scenario { Name = "login-returns", Expected = "No screen follows login", Outcome = Outcome.TimedOut, Submissions = 1, TimeoutSeconds = 5 },
@@ -141,10 +142,10 @@ internal static class FakeTargetChecks
     private static LoginResult PressLive(ILoginUi ui)
     {
         var result = new LoginResult { RequestedMode = TradingMode.Live };
-        DateTime deadline = DateTime.UtcNow.AddSeconds(15);
+        TimeSpan deadline = MonotonicClock.Now + TimeSpan.FromSeconds(15);
         while (!ui.Inspect().LiveReady)
         {
-            if (DateTime.UtcNow > deadline)
+            if (MonotonicClock.Now > deadline)
             {
                 result.Outcome = Outcome.TimedOut;
                 return result;
@@ -187,14 +188,20 @@ internal static class FakeTargetChecks
                 ? PressLive(ui)
                 : new LoginEngine(ui, used, new SystemClock(), recorded, TimeSpan.FromSeconds(scenario.TimeoutSeconds), scenario.Mode).Run(false, CancellationToken.None);
             string[] actions = File.Exists(record) ? File.ReadAllLines(record) : new string[0];
-            if (result.Outcome != scenario.Outcome)
-            {
-                return "outcome " + result.Outcome + ", expected " + scenario.Outcome;
-            }
-
+            // Checked first, so a dialog the run never saw as modal says so.
             if (scenario.OwnedDialog && !recorded.SawOwnedWindow)
             {
                 return "the owned dialog was not recorded";
+            }
+
+            if (scenario.OwnedDialog && !recorded.SawOwnedModal)
+            {
+                return "the owned dialog was not recorded as modal";
+            }
+
+            if (result.Outcome != scenario.Outcome)
+            {
+                return "outcome " + result.Outcome + ", expected " + scenario.Outcome;
             }
 
             if (result.LoginSubmissions != scenario.Submissions || result.SimulationSelections != scenario.Simulation || result.LiveSelections != scenario.Live)
@@ -271,7 +278,7 @@ internal static class FakeTargetChecks
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                if (settle.Expired(DateTime.UtcNow))
+                if (settle.Expired(MonotonicClock.Now))
                 {
                     throw;
                 }

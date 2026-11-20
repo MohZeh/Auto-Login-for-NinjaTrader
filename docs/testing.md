@@ -43,11 +43,13 @@ login, an account without Live, an unsigned target, an already signed-in environ
 screen with and without a trusted target, and pressing Live directly on an Open Account
 button. CI runs the same scenarios.
 
-An owned modal dialog is a child of its owner in the UI Automation tree, so it is not
-recognized as a modal window. The sign-in stops safely at the stage timeout instead of
-showing the manual-attention message. Run records list the target's windows by type
-(class, automation id, modal, owned) without titles or text, so such a dialog is visible
-afterwards; the fake-target scenario checks that it is recorded.
+An owned modal dialog is a child of its owner in the UI Automation tree. While no known
+screen is ready, a visible owned modal dialog that stays open for 10 seconds stops the
+sign-in with the manual-attention message, instead of waiting for the stage timeout; a
+shorter notice that closes by itself does not. Only the dialog's type is read, and nothing
+in it is searched or clicked. Run records list the target's windows by type (class,
+automation id, modal, owned) without titles or text; the fake-target scenario checks that
+the dialog is recorded as owned and modal and that the sign-in stops with that message.
 
 These scenarios do not cover the login worker process, Windows Credential Manager or real
 NinjaTrader behavior, and they do not replace Human acceptance.

@@ -16,8 +16,8 @@ using NinjaTraderAutoLogin;
 
 internal sealed class FakeClock : IClock
 {
-    private DateTime now = new DateTime(2026, 10, 27, 0, 0, 0, DateTimeKind.Utc);
-    public DateTime UtcNow
+    private TimeSpan now = TimeSpan.FromHours(1);
+    public TimeSpan Now
     {
         get
         {
@@ -33,7 +33,7 @@ internal sealed class FakeClock : IClock
         }
 
         token.ThrowIfCancellationRequested();
-        now = now.AddSeconds(1);
+        now += TimeSpan.FromSeconds(1);
     }
 }
 internal sealed class FakeCredentials : ICredentials
@@ -311,6 +311,44 @@ internal static partial class TestRunner
             var credentials = new FakeCredentials();
             Require(Run(ui, credentials, new FakeClock(), new FakeEvidence(), false, CancellationToken.None).Outcome == Outcome.NeedsManual && credentials.Reads == 0);
         });
+        Test("An owned dialog that stays open asks for attention long before the stage timeout", delegate
+        {
+            var ui = Script(new UiSnapshot { LoginReady = true }, new UiSnapshot { OwnedDialog = true });
+            var clock = new FakeClock();
+            TimeSpan start = clock.Now;
+            LoginResult result = new LoginEngine(ui, new FakeCredentials(), clock, new FakeEvidence(), TimeSpan.FromSeconds(120)).Run(false, CancellationToken.None);
+            TimeSpan waited = clock.Now - start;
+            Require(result.Outcome == Outcome.NeedsManual && ui.Submissions == 1 && ui.Selections == 0);
+            Require(waited >= LoginEngine.OwnedDialogGrace && waited < TimeSpan.FromSeconds(30));
+        });
+        Test("An owned dialog that closes within the grace period lets the sign-in continue", delegate
+        {
+            var steps = new List<UiSnapshot> { new UiSnapshot { LoginReady = true } };
+            for (int round = 0; round < 2; round++)
+            {
+                // Each round stays just under the grace period, then the dialog closes.
+                for (int second = 0; second < 8; second++)
+                {
+                    steps.Add(new UiSnapshot { OwnedDialog = true });
+                }
+
+                steps.Add(new UiSnapshot());
+            }
+
+            steps.Add(new UiSnapshot { SimulationReady = true });
+            steps.Add(new UiSnapshot { ControlCenter = true });
+            var ui = Script(steps.ToArray());
+            LoginResult result = new LoginEngine(ui, new FakeCredentials(), new FakeClock(), new FakeEvidence(), TimeSpan.FromSeconds(120)).Run(false, CancellationToken.None);
+            Require(result.Outcome == Outcome.Success && ui.Submissions == 1 && ui.Selections == 1);
+        });
+        Test("The sign-in clock follows elapsed time, not the Windows clock", delegate
+        {
+            var clock = new SystemClock();
+            TimeSpan before = clock.Now;
+            clock.Wait(CancellationToken.None);
+            TimeSpan after = clock.Now;
+            Require(after - before >= TimeSpan.FromMilliseconds(350) && after <= MonotonicClock.Now);
+        });
         Test("Ambiguous controls fail closed and preserve metadata", delegate
         {
             var ui = Script(new UiSnapshot { Ambiguous = true, LoginReady = true });
@@ -376,10 +414,10 @@ internal static partial class TestRunner
         Test("Grace periods expire only when a state lasts without clearing", delegate
         {
             var grace = new ProblemGrace(TimeSpan.FromSeconds(10));
-            var start = new DateTime(2026, 11, 4, 0, 0, 0, DateTimeKind.Utc);
-            Require(!grace.Expired(start) && !grace.Expired(start.AddSeconds(9)) && grace.Expired(start.AddSeconds(10)));
+            Func<int, TimeSpan> at = seconds => TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(seconds);
+            Require(!grace.Expired(at(0)) && !grace.Expired(at(9)) && grace.Expired(at(10)));
             grace.Clear();
-            Require(!grace.Expired(start.AddSeconds(11)) && grace.Expired(start.AddSeconds(21)));
+            Require(!grace.Expired(at(11)) && grace.Expired(at(21)));
         });
         Test("An unexpected failure records its type and code without its message", delegate
         {

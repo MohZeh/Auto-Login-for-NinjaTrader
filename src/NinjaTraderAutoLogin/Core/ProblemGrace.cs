@@ -6,13 +6,13 @@ namespace NinjaTraderAutoLogin
     internal sealed class ProblemGrace
     {
         private readonly TimeSpan span;
-        private DateTime? first;
+        private TimeSpan? first;
 
         public ProblemGrace(TimeSpan span)
         {
             this.span = span;
         }
-        public bool Expired(DateTime now)
+        public bool Expired(TimeSpan now)
         {
             if (!first.HasValue)
             {

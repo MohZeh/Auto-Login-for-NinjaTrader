@@ -5,11 +5,11 @@ namespace NinjaTraderAutoLogin
 {
     internal sealed class SystemClock : IClock
     {
-        public DateTime UtcNow
+        public TimeSpan Now
         {
             get
             {
-                return DateTime.UtcNow;
+                return MonotonicClock.Now;
             }
         }
         public void Wait(CancellationToken cancellation)

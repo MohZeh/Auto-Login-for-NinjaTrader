@@ -5,6 +5,7 @@ namespace NinjaTraderAutoLogin
 {
     internal sealed class LoginEngine
     {
+        public static readonly TimeSpan OwnedDialogGrace = TimeSpan.FromSeconds(10);
         private readonly ILoginUi ui;
         private readonly ICredentials credentials;
         private readonly IClock clock;
@@ -26,25 +27,28 @@ namespace NinjaTraderAutoLogin
         {
             var result = new LoginResult { RequestedMode = requestedMode };
             var stage = Stage.WaitingForLogin;
-            DateTime deadline = clock.UtcNow + timeout;
+            TimeSpan deadline = clock.Now + timeout;
             // Windows can overlap briefly while NinjaTrader changes screens. These only
             // delay observation; no action is ever repeated.
             var ambiguity = new ProblemGrace(TimeSpan.FromSeconds(3));
             var loginReturned = new ProblemGrace(TimeSpan.FromSeconds(5));
+            // A dialog owned by a NinjaTrader window can be a short notice that closes by itself,
+            // so it asks for attention only after it stays open this long.
+            var ownedDialog = new ProblemGrace(OwnedDialogGrace);
             try
             {
                 RequireEvidence(evidence.Event(stage, "Started", null));
                 while (true)
                 {
                     cancellation.ThrowIfCancellationRequested();
-                    if (clock.UtcNow >= deadline)
+                    if (clock.Now >= deadline)
                     {
                         throw new LoginProblem(Outcome.TimedOut);
                     }
 
                     UiSnapshot snapshot = ui.Inspect();
                     cancellation.ThrowIfCancellationRequested();
-                    if (clock.UtcNow >= deadline)
+                    if (clock.Now >= deadline)
                     {
                         throw new LoginProblem(Outcome.TimedOut);
                     }
@@ -52,7 +56,7 @@ namespace NinjaTraderAutoLogin
                     RequireEvidence(evidence.Event(stage, "Observed", snapshot));
                     if (snapshot.Ambiguous)
                     {
-                        if (ambiguity.Expired(clock.UtcNow))
+                        if (ambiguity.Expired(clock.Now))
                         {
                             throw new LoginProblem(Outcome.UnsupportedUi);
                         }
@@ -68,6 +72,15 @@ namespace NinjaTraderAutoLogin
                     }
 
                     if (snapshot.ManualRequired)
+                    {
+                        throw new LoginProblem(Outcome.NeedsManual);
+                    }
+
+                    if (!snapshot.OwnedDialog)
+                    {
+                        ownedDialog.Clear();
+                    }
+                    else if (ownedDialog.Expired(clock.Now))
                     {
                         throw new LoginProblem(Outcome.NeedsManual);
                     }
@@ -101,7 +114,7 @@ namespace NinjaTraderAutoLogin
                         {
                             loginReturned.Clear();
                         }
-                        else if (loginReturned.Expired(clock.UtcNow))
+                        else if (loginReturned.Expired(clock.Now))
                         {
                             throw new LoginProblem(Outcome.LoginNotAccepted);
                         }
@@ -114,7 +127,7 @@ namespace NinjaTraderAutoLogin
                             // An existing, already-authenticated mode dialog can be continued.
                             SelectRequestedMode(stage, result, cancellation);
                             stage = Stage.WaitingForControlCenter;
-                            deadline = clock.UtcNow + timeout;
+                            deadline = clock.Now + timeout;
                         }
                         else if (snapshot.LoginReady)
                         {
@@ -131,7 +144,7 @@ namespace NinjaTraderAutoLogin
                             }
                             result.LoginSubmissions++;
                             stage = Stage.WaitingForTradingMode;
-                            deadline = clock.UtcNow + timeout;
+                            deadline = clock.Now + timeout;
                             RequireEvidence(evidence.Event(stage, "LoginSubmitted", null));
                         }
                     }
@@ -139,7 +152,7 @@ namespace NinjaTraderAutoLogin
                     {
                         SelectRequestedMode(stage, result, cancellation);
                         stage = Stage.WaitingForControlCenter;
-                        deadline = clock.UtcNow + timeout;
+                        deadline = clock.Now + timeout;
                     }
                     clock.Wait(cancellation);
                 }
