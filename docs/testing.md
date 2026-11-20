@@ -10,7 +10,10 @@ denies reading with a real access rule and restores it, and another injects fail
 access rules cannot produce. The attempt-record checks run the engine with the worker's
 credential chain against such a key, stop before any answer, and read the key again as a
 restarted app would; one denies writing to show that a refusal whose writes fail is still
-held. A check fails if its key cannot be removed. Shortcut tests use
+held. A check fails if its key cannot be removed. Record-file checks replace a JSON record
+while it is being read, the same pair as the progress window and the worker, and show that
+a hold by another program is waited out briefly and then fails without a temporary file.
+Shortcut tests use
 workspace-only folders
 with spaces, Unicode, apostrophes and commas; they never launch the application,
 read credentials or modify the Desktop. Packaging rejects private path content

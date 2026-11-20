@@ -1808,6 +1808,7 @@ internal static partial class TestRunner
         RunPortabilityChecks();
         RunPasswordEntryChecks();
         RunAttemptRecordChecks();
+        RunRecordFileChecks();
         RunReleaseChecks();
         if (args.Length >= 1)
         {

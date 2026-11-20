@@ -289,7 +289,12 @@ namespace NinjaTraderAutoLogin
                 JsonFiles.Write(FilePath, record);
                 return true;
             }
-            catch { return false; }
+            catch (Exception error)
+            {
+                // A failed write stops the sign-in as evidence unavailable; keep its type for later.
+                AppFaults.Record("PersistRunEvidence", error);
+                return false;
+            }
         }
         public static string LastStage(string path)
         {
