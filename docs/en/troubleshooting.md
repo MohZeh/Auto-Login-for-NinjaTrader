@@ -36,7 +36,7 @@ When a sign-in cannot finish, the app stops and shows a message at the bottom of
 After NinjaTrader rejects a sign-in, the **Setup** page keeps a warning, and the app does not send that password again. This protects your account: repeated wrong attempts can lock it.
 
 - *NinjaTrader rejected this username or password. It won't be resent.*: type the correct password and select **Save settings**.
-- *The last sign-in didn't complete. It may be the password, the connection or an interruption.*: the cause is not certain. It also appears when the app, the computer or the sign-in stopped after the password was sent and before NinjaTrader answered. If your password is correct, start the sign-in again; the app asks *Try the same password again?* Select **Try again**.
+- *Sign-in didn't complete: password, connection or a stop.*: the cause is not certain. It also appears when the app, the computer or the sign-in stopped after the password was sent and before NinjaTrader answered. If your password is correct, start the sign-in again; the app asks *Try the same password again?* Select **Try again**.
 
 The saved login is not deleted automatically, because the cause may be a locked account or a failed connection. To delete it, select **Remove saved login** next to the warning.
 

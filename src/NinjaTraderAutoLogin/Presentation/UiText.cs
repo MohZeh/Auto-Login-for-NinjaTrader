@@ -63,7 +63,7 @@ namespace NinjaTraderAutoLogin
         public static string RejectedHint(string language, bool uncertain)
         {
             return uncertain
-                ? Choose(language, "The last sign-in didn't complete. It may be the password, the connection or an interruption.", "ورود قبلی کامل نشد؛ ممکن است از رمز، اتصال یا توقف برنامه باشد.")
+                ? Choose(language, "Sign-in didn't complete: password, connection or a stop.", "ورود کامل نشد؛ شاید از رمز، اتصال یا توقف برنامه.")
                 : Choose(language, "NinjaTrader rejected this username or password. It won't be resent.", "نینجاتریدر این نام کاربری یا رمز را نپذیرفت؛ ارسال نمی‌شود.");
         }
         public static string LegalNotice(string language)
