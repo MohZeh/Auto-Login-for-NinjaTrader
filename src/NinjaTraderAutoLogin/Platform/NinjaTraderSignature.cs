@@ -43,6 +43,13 @@ namespace NinjaTraderAutoLogin
         {
             return String.Equals(name, Publisher, StringComparison.Ordinal);
         }
+#if TEST_HOOKS
+        // The test build trusts only the fake target that CI named; see TestHooks.
+        public static bool IsTrusted(string path)
+        {
+            return TestHooks.IsTrustedTarget(path);
+        }
+#else
         public static bool IsTrusted(string path)
         {
             try
@@ -63,6 +70,7 @@ namespace NinjaTraderAutoLogin
             catch (UnauthorizedAccessException) { return false; }
             catch (ArgumentException) { return false; }
         }
+#endif
         // The certificate chain and timestamp are checked offline, so a sign-in never waits on the network.
         private static bool HasValidSignature(string path)
         {

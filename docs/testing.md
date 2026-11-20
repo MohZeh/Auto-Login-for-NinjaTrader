@@ -54,8 +54,20 @@ in it is searched or clicked. Run records list the target's windows by type (cla
 automation id, modal, owned) without titles or text; the fake-target scenario checks that
 the dialog is recorded as owned and modal and that the sign-in stops with that message.
 
-These scenarios do not cover the login worker process, Windows Credential Manager or real
-NinjaTrader behavior, and they do not replace Human acceptance.
+These scenarios run the engine inside the test process. The end-to-end worker checks run
+the rest of the chain: a separate `TestHooks` build of the app acts as the parent, starts
+its real worker process, which reads a test password from Windows Credential Manager and
+signs in to the fake target on a private desktop, and then applies the refusal records.
+They check a successful sign-in, a refused password that is kept in both records and never
+sent again, and a parent that is stopped after the password left, whose next run, as a
+restarted app, holds the password back. They also check that the release build has no
+test-parent command and that the `TestHooks` build does not start without its test folder.
+
+The `TestHooks` build is compiled only for these checks, never packaged, and has a
+different hash. It uses its own data folder, registry key and Credential Manager name, and
+it trusts only the fake target CI names in place of NinjaTrader's signature. The release
+executable contains none of this code. These checks do not cover the app's windows, tray
+and dialogs, or real NinjaTrader behavior, and they do not replace Human acceptance.
 
 ## Existing validation scopes
 

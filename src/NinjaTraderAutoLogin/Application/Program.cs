@@ -15,6 +15,12 @@ namespace NinjaTraderAutoLogin
             {
                 return AutomationWorker.Run(args[1]);
             }
+#if TEST_HOOKS
+            if (args.Length == 3 && args[0] == TestParent.Command)
+            {
+                return TestParent.Run(args[1], args[2]);
+            }
+#endif
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

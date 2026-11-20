@@ -13,7 +13,11 @@ namespace NinjaTraderAutoLogin
                     assembly, typeof(System.Reflection.AssemblyInformationalVersionAttribute))).InformationalVersion;
             }
         }
+#if TEST_HOOKS
+        public const string CredentialTarget = TestHooks.CredentialTarget;
+#else
         public const string CredentialTarget = "NinjaTraderAutoLogin/default";
+#endif
         public const int StageTimeoutSeconds = 120;
         public const int ProcessSettleSeconds = 10;
         // The sign-in window takes longer than this to appear, so a later check loses no time.

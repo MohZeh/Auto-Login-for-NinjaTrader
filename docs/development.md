@@ -8,7 +8,9 @@ locked mode. The SDK selection is in `global.json`; product version is owned by
 
 - `./build.ps1`: restore and build the solution into `artifacts/`.
 - `./scripts/test.ps1 -NoBuild`: essential checks, fake-process supervision tests,
-  isolated embedded-font check and mathematical layout audit.
+  isolated embedded-font check and mathematical layout audit. It also builds the app in
+  the `TestHooks` configuration and runs the end-to-end worker checks with it; that build
+  is for tests only and is never packaged.
 - `./scripts/check-repository.ps1`: limited publication hygiene and font-hash checks.
 - `dotnet format NinjaTraderLogin.sln --no-restore`: apply the
   configured code format. Add `--verify-no-changes` to verify it.
