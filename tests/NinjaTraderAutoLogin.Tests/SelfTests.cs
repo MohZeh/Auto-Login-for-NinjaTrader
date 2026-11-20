@@ -269,6 +269,11 @@ internal static partial class TestRunner
             return FakeTargetChecks.Run(args[1], args[2]);
         }
 
+        if (args.Length == 4 && args[0] == "--worker-end-to-end")
+        {
+            return RunWorkerEndToEnd(args[1], args[2], args[3]);
+        }
+
         Test("Login -> Simulation -> Control Center invokes each action once", delegate
         {
             var ui = Script(new UiSnapshot { LoginReady = true }, new UiSnapshot { SimulationReady = true }, new UiSnapshot { ControlCenter = true });

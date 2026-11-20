@@ -13,7 +13,11 @@ namespace NinjaTraderAutoLogin
     // refusal or an unfinished attempt is held.
     internal sealed class RejectionLatch
     {
+#if TEST_HOOKS
+        public const string DefaultKeyPath = TestHooks.LatchKeyPath;
+#else
         public const string DefaultKeyPath = @"Software\NinjaTraderAutoLogin";
+#endif
         private const string ValueName = "CredentialsRejected";
         public static readonly RejectionLatch Current = new RejectionLatch(DefaultKeyPath);
         private readonly string keyPath, parentPath, keyName;

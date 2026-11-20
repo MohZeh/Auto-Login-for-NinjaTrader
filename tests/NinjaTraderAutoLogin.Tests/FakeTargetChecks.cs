@@ -289,12 +289,29 @@ internal static class FakeTargetChecks
     }
     private static Process Start(string target, string scenario, string record, string desktop)
     {
+        return StartOn(desktop, target, scenario + " \"" + record + "\"");
+    }
+
+    // A desktop no window reaches the screen from; processes started on it stay there.
+    internal static IntPtr CreatePrivateDesktop(string name)
+    {
+        return CreateDesktop(name, IntPtr.Zero, IntPtr.Zero, 0, 0x10000000, IntPtr.Zero);
+    }
+
+    internal static void ClosePrivateDesktop(IntPtr desktop)
+    {
+        CloseDesktop(desktop);
+    }
+
+    // Starts a program on the private desktop. Its own child processes start there too.
+    internal static Process StartOn(string desktop, string application, string arguments)
+    {
         var startup = new StartupInfo { Size = Marshal.SizeOf(typeof(StartupInfo)), Desktop = desktop };
         ProcessInformation information;
-        string commandLine = "\"" + target + "\" " + scenario + " \"" + record + "\"";
-        if (!CreateProcess(target, commandLine, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, Path.GetDirectoryName(target), ref startup, out information))
+        string commandLine = "\"" + application + "\" " + arguments;
+        if (!CreateProcess(application, commandLine, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, Path.GetDirectoryName(application), ref startup, out information))
         {
-            throw new InvalidOperationException("TargetDidNotStart:" + Marshal.GetLastWin32Error());
+            throw new InvalidOperationException("ProcessDidNotStart:" + Marshal.GetLastWin32Error());
         }
 
         CloseHandle(information.Thread);

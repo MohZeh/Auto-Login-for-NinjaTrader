@@ -20,6 +20,14 @@ try {
     $fakeTarget = Join-Path (Get-ProjectOutput 'NinjaTraderAutoLogin.FakeTarget' $Configuration) 'NinjaTrader.exe'
     & (Join-Path $tests 'NinjaTraderAutoLogin.Tests.exe') --fake-target $fakeTarget $validation
     if ($LASTEXITCODE -ne 0) { throw 'Fake-target checks failed.' }
+    # The real worker, parent and Credential Manager run only in a separate TestHooks build,
+    # with its own data folder, registry key and Credential Manager name. It is never packaged.
+    & (Get-ProjectSdk) build (Join-Path $ProjectRoot 'src\NinjaTraderAutoLogin\NinjaTraderAutoLogin.csproj') --configuration TestHooks --no-restore -m:1 -nr:false --verbosity minimal
+    if ($LASTEXITCODE -ne 0) { throw 'TestHooks build failed.' }
+    $hooks = Join-Path (Get-ProjectOutput 'NinjaTraderAutoLogin' 'TestHooks') 'NinjaTraderAutoLogin.exe'
+    if ((Get-FileHash -LiteralPath $hooks).Hash -eq $identity.helperSha256) { throw 'The TestHooks build matches the release build.' }
+    & (Join-Path $tests 'NinjaTraderAutoLogin.Tests.exe') --worker-end-to-end $hooks $fakeTarget $validation
+    if ($LASTEXITCODE -ne 0) { throw 'End-to-end worker checks failed.' }
 } finally { $env:TEMP = $previousTemp; $env:TMP = $previousTmp }
 $tools = Join-Path (Get-ProjectOutput 'NinjaTraderAutoLogin.Tools' $Configuration) 'NinjaTraderAutoLogin.Tools.exe'
 $fontOutput = & $tools font-probe
@@ -35,5 +43,5 @@ $checks = Get-Content -LiteralPath (Join-Path $validation 'headless-checks.json'
 [ordered]@{
     version = $identity.version; helperSha256 = $identity.helperSha256
     checks = @($checks.Checks).Count; calculatedScreenCases = $audit.Cases; calculatedManualSizeCases = $audit.ResizeCases
-    result = 'PASS'; fakeTargetExecuted = $true; realNinjaTraderExecuted = $false; nativeAcceptance = 'NOT_ESTABLISHED_BY_HEADLESS_TESTS'
+    result = 'PASS'; fakeTargetExecuted = $true; workerEndToEndExecuted = $true; realNinjaTraderExecuted = $false; nativeAcceptance = 'NOT_ESTABLISHED_BY_HEADLESS_TESTS'
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $validation 'test-summary.json') -Encoding UTF8

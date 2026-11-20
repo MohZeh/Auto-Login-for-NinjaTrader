@@ -9,6 +9,13 @@
     <AssemblyTitle>Auto Login for NinjaTrader</AssemblyTitle>
     <Description>Local Windows helper for NinjaTrader sign-in.</Description>
   </PropertyGroup>
+  <!-- CI-only build for the end-to-end worker checks; see Platform/TestHooks.cs. It is never
+       packaged, and the Release build does not contain TEST_HOOKS code. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'TestHooks'">
+    <DefineConstants>$(DefineConstants);TEST_HOOKS</DefineConstants>
+    <Optimize>true</Optimize>
+    <InformationalVersion>$(Version)-testhooks</InformationalVersion>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Net.Http" />
