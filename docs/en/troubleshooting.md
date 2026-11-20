@@ -25,9 +25,9 @@ When a sign-in cannot finish, the app stops and shows a message at the bottom of
 | A message ending *… is new for this app and not yet confirmed on this PC.* | The sign-in stopped on a NinjaTrader version this app has not seen work yet; its windows may have changed | Sign in manually, then [report it](#report-a-problem) with the support summary |
 | *A NinjaTrader control was not recognized. A diagnostic report was saved.* | NinjaTrader's window looks different from what the app knows, often after a NinjaTrader update | Sign in manually and [report it](#report-a-problem) |
 | *Save your username and password to enable automatic login.* | No saved login | Enter your username and password and select **Save settings** |
-| *The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.* | NinjaTrader refused this password earlier, and the app is holding it back | See [Sign-in was rejected](#sign-in-was-rejected) |
+| *The last sign-in didn't complete, so the password was not sent again. Enter it again here.* | NinjaTrader refused this password earlier, or the last sign-in stopped before its answer was known, and the app is holding the password back | See [Sign-in was rejected](#sign-in-was-rejected) |
 | *Your choice to try again could not be saved, so the password was not sent.* | The app could not record that you allowed another attempt | Wait a moment and try again; if it repeats, check that the disk is not full |
-| *The record of an earlier refused password could not be read, so the password was not sent.* | Windows did not let the app read its small registry record | Make sure your Windows user can use its registry normally, then try again |
+| *The app could not read or update its sign-in record in the registry, so the password was not sent.* | Windows did not let the app read or write its small registry record | Make sure your Windows user can use its registry normally, then try again |
 | *The app could not save its diagnostic report.* | The sign-in record could not be written, so the app stopped to stay safe | Check that the disk is not full, then try again |
 | *The operation could not finish. A diagnostic report was saved.* | Something unexpected happened | Try again once; if it happens again, [report it](#report-a-problem) |
 
@@ -36,7 +36,7 @@ When a sign-in cannot finish, the app stops and shows a message at the bottom of
 After NinjaTrader rejects a sign-in, the **Setup** page keeps a warning, and the app does not send that password again. This protects your account: repeated wrong attempts can lock it.
 
 - *NinjaTrader rejected this username or password. It won't be resent.*: type the correct password and select **Save settings**.
-- *Sign-in wasn't accepted. It may be the password or the connection.*: the cause is not certain. If your password is correct and the connection was the problem, start the sign-in again; the app asks *Try the same password again?* Select **Try again**.
+- *Sign-in didn't complete: password, connection or a stop.*: the cause is not certain. It also appears when the app, the computer or the sign-in stopped after the password was sent and before NinjaTrader answered. If your password is correct, start the sign-in again; the app asks *Try the same password again?* Select **Try again**.
 
 The saved login is not deleted automatically, because the cause may be a locked account or a failed connection. To delete it, select **Remove saved login** next to the warning.
 

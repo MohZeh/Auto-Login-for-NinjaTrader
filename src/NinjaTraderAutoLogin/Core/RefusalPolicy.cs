@@ -75,6 +75,42 @@ namespace NinjaTraderAutoLogin
             }
         }
 
+        // Before the password is sent, the worker records the attempt in the registry as
+        // uncertain, and sends nothing if it cannot. After the run, this says what the records
+        // must hold. Null means no password left in this run, or the record of the run could not
+        // be read; the registry then decides, because the attempt record is written first.
+        public static RefusalState? AfterRun(Outcome outcome, bool concluded, int submitsStarted, int submissions, bool modeReached)
+        {
+            if (submitsStarted == 0 && submissions == 0)
+            {
+                return null;
+            }
+
+            if (concluded && submissions > 0 && outcome == Outcome.AuthenticationFailed)
+            {
+                return RefusalState.Rejected;
+            }
+
+            if (concluded && submissions > 0 && outcome == Outcome.LoginNotAccepted)
+            {
+                return RefusalState.Uncertain;
+            }
+
+            // The environment screen appears only after NinjaTrader accepted the password.
+            if (submissions > 0 && modeReached)
+            {
+                return RefusalState.None;
+            }
+
+            // The password may have left, but no answer to it was seen to the end.
+            if (!concluded || submitsStarted > submissions)
+            {
+                return RefusalState.Uncertain;
+            }
+
+            return RefusalState.None;
+        }
+
         // A refusal is lifted only when both records are cleared and confirmed.
         public static bool Lifted(bool fileSaved, bool registryCleared)
         {

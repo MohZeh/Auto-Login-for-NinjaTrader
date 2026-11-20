@@ -7,7 +7,10 @@ standalone shortcut script. Headless checks exercise command ownership and exact
 rollback without touching the registry. Only the refusal-record checks write to the
 registry, each to its own key under `HKCU\Software\NinjaTraderAutoLogin.Tests`. One check
 denies reading with a real access rule and restores it, and another injects failures that
-access rules cannot produce. A check fails if its key cannot be removed. Shortcut tests use
+access rules cannot produce. The attempt-record checks run the engine with the worker's
+credential chain against such a key, stop before any answer, and read the key again as a
+restarted app would; one denies writing to show that a refusal whose writes fail is still
+held. A check fails if its key cannot be removed. Shortcut tests use
 workspace-only folders
 with spaces, Unicode, apostrophes and commas; they never launch the application,
 read credentials or modify the Desktop. Packaging rejects private path content

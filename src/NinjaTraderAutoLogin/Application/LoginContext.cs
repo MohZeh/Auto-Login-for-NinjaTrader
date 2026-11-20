@@ -814,19 +814,18 @@ namespace NinjaTraderAutoLogin
                 SaveOwnSettings("SaveConfirmedVersion");
                 lastNewVersion = null;
             }
-            if ((outcome == Outcome.AuthenticationFailed || outcome == Outcome.LoginNotAccepted) && completed.Result.LoginSubmissions > 0 && !settingsInvalid)
+            if (!settingsInvalid)
             {
-                settings.CredentialsRejected = true;
-                settings.RejectionUncertain = outcome == Outcome.LoginNotAccepted;
                 // Two independent records, so one failed write cannot lose the refusal on restart.
-                bool latched = RejectionLatch.Current.Write(RefusalPolicy.Of(settings));
-                if (!SaveOwnSettings("SaveCredentialsRejected"))
+                RefusalUpdate update = RefusalRecords.AfterRun(RefusalPolicy.Of(settings), completed.Result, RejectionLatch.Current);
+                HoldRefusal(update.Hold);
+                if (update.Save && !SaveOwnSettings("SaveCredentialsRejected"))
                 {
                     // Watching stops until the owner acts. If the registry write failed too,
-                    // the refusal lives only in memory, so a restart must not come first.
+                    // only the attempt record, as uncertain, holds the password back on restart.
                     pause.Fault();
                     pauseMenu.Checked = true;
-                    if (!latched)
+                    if (!update.Latched)
                     {
                         AppFaults.Record("RefusalNotDurable", new IOException("RefusalNotDurable"));
                     }
