@@ -13,10 +13,8 @@ restarted app would; one denies writing to show that a refusal whose writes fail
 held. A check fails if its key cannot be removed. Record-file checks replace a JSON record
 while it is being read, the same pair as the progress window and the worker, and show that
 a hold by another program is waited out briefly and then fails without a temporary file.
-Shortcut tests use
-workspace-only folders
-with spaces, Unicode, apostrophes and commas; they never launch the application,
-read credentials or modify the Desktop. Packaging rejects private path content
+Shortcut tests use workspace-only folders with spaces, Unicode, apostrophes and commas;
+they never launch the application, read credentials or modify the Desktop. Packaging rejects private path content
 and unexpected ZIP entries before promoting an archive to the package directory.
 
 The published `v0.1.0` executable (SHA-256 `66963588E17AEF926204A3B3496E3DB113C8F69184B8198795FF2B41F751E4DB`,
@@ -24,8 +22,11 @@ the same file GitHub's release workflow built and attested) has Human-observed S
 through both the dedicated shortcut and watching NinjaTrader, on NinjaTrader 8.1.8.4, recorded on
 2026-11-10. On NinjaTrader 8.1.9.0, Simulation sign-in through both the shortcut and watching
 was observed on 2026-11-19 with executable `EFF12838886E6CA64D90073FECEF9A2128A23E251EEF02DE808B81F9125A41F0`,
-which is why 8.1.9.0 is listed as tested. Other NinjaTrader versions, Live sign-in and the run
-records themselves are not part of this public claim.
+which is why 8.1.9.0 is listed as tested. The `v0.1.2` executable (SHA-256
+`8D6EB14E7B2098BEAE0545B19888CBB14EE1C735D09F5927F49B20E3C7C1E944`) has Human-observed Simulation
+sign-in through both the shortcut and watching on NinjaTrader 8.1.9.0, recorded on 2026-11-20.
+Other NinjaTrader versions, Live sign-in and the run records themselves are not part of this
+public claim.
 
 Human acceptance is recorded per executable hash. A login claim needs fresh records from
 that executable, each with one submission and one environment selection. Automatic
