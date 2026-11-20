@@ -31,6 +31,10 @@ internal static partial class TestRunner
             Require(RefusalPolicy.AfterRun(Outcome.Success, true, 1, 1, true) == RefusalState.None);
             Require(RefusalPolicy.AfterRun(Outcome.TimedOut, true, 1, 1, false) == RefusalState.None);
             Require(RefusalPolicy.AfterRun(Outcome.Cancelled, true, 1, 1, false) == RefusalState.None);
+            // A message that needs the user is not an answer, unless the environment screen came first.
+            Require(RefusalPolicy.AfterRun(Outcome.NeedsManual, true, 1, 1, false) == RefusalState.Uncertain);
+            Require(RefusalPolicy.AfterRun(Outcome.NeedsManual, true, 1, 1, true) == RefusalState.None);
+            Require(RefusalPolicy.AfterRun(Outcome.NeedsManual, true, 0, 0, false) == null);
             // The send itself failed part way, so the password may have left.
             Require(RefusalPolicy.AfterRun(Outcome.UnexpectedFailure, true, 1, 0, false) == RefusalState.Uncertain);
             // The worker stopped before it saw an answer.

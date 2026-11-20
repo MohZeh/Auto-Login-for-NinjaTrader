@@ -126,6 +126,17 @@ internal static partial class TestRunner
                 Require(next.Result != null && next.Result.Outcome == "CredentialsRejected" && next.Result.LoginSubmissions == 0);
                 Require(next.Actions.Length == 0 && next.Result.Hold == "Rejected");
             });
+            Test("A NinjaTrader message after the password left keeps the attempt uncertain, so the next run asks first", delegate
+            {
+                ResetEndToEnd();
+                EndToEndRun dialog = RunThroughWorker("dialog-after-login", null);
+                Require(dialog.Result != null && dialog.Result.Outcome == "NeedsManual" && dialog.Result.Hold == "Uncertain");
+                Require(dialog.Result.Concluded && dialog.Result.Save && dialog.Result.Saved && SameActions(dialog.Actions, EndToEndLogin));
+                Require(EndToEndLatch() == (int)RefusalState.Uncertain && SettingsFileRejected());
+                EndToEndRun next = RunThroughWorker("normal", null);
+                Require(next.Result != null && next.Result.Outcome == "CredentialsRejected" && next.Result.Hold == "Uncertain");
+                Require(next.Actions.Length == 0 && next.Result.LoginSubmissions == 0);
+            });
             Test("A parent that dies after the password left holds the next attempt back after a restart", delegate
             {
                 ResetEndToEnd();

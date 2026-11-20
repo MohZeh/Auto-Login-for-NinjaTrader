@@ -59,8 +59,9 @@ the rest of the chain: a separate `TestHooks` build of the app acts as the paren
 its real worker process, which reads a test password from Windows Credential Manager and
 signs in to the fake target on a private desktop, and then applies the refusal records.
 They check a successful sign-in, a refused password that is kept in both records and never
-sent again, and a parent that is stopped after the password left, whose next run, as a
-restarted app, holds the password back. They also check that the release build has no
+sent again, an owned NinjaTrader dialog after the send that keeps the attempt uncertain so
+the next run asks first, and a parent that is stopped after the password left, whose next
+run, as a restarted app, holds the password back. They also check that the release build has no
 test-parent command and that the `TestHooks` build does not start without its test folder.
 
 The `TestHooks` build is compiled only for these checks, never packaged, and has a

@@ -36,8 +36,9 @@
 - Before a password is sent, the worker records the attempt in the same registry value as
   an uncertain refusal, and sends nothing if that record cannot be written. A known answer
   replaces it: a refusal is recorded, and any other answer clears it. If the app or its
-  worker stops before an answer is seen, or the writes after a refusal fail, the record
-  stays, and the next attempt asks the user first. The registry value exists only while a
+  worker stops before an answer is seen, NinjaTrader shows a message that needs the user
+  instead of an answer, or the writes after a refusal fail, the record stays, and the next
+  attempt asks the user first. The registry value exists only while a
   refusal or an unfinished attempt is held.
 - A refusal guards only the password. An environment screen that is already signed in
   needs no password, so the app may still select Simulation or Live there, after the same

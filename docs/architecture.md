@@ -42,7 +42,9 @@ registry value as uncertain before the password is handed to the engine; if the 
 cannot be confirmed, nothing is sent (`RefusalUnavailable`). After the run, `RefusalRecords`
 applies `RefusalPolicy.AfterRun` to what the run record shows: a refusal the worker saw
 replaces the attempt record, a known answer clears it, and a send that started without an
-answer the worker saw to the end keeps it. A stop of the parent or worker therefore leaves
+answer the worker saw to the end keeps it. A NinjaTrader message that needs the user after
+the send (`NeedsManual`) is not an answer, so it keeps the record unless the environment
+screen had already appeared. A stop of the parent or worker therefore leaves
 an uncertain refusal that the next attempt finds, even after a restart.
 
 The worker verifies the request against the existing run record and process identity.

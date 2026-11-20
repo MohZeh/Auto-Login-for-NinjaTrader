@@ -102,6 +102,13 @@ namespace NinjaTraderAutoLogin
                 return RefusalState.None;
             }
 
+            // A NinjaTrader message after the send is not an answer to the password, and it may
+            // be the refusal itself, so the next attempt asks first.
+            if (submissions > 0 && outcome == Outcome.NeedsManual)
+            {
+                return RefusalState.Uncertain;
+            }
+
             // The password may have left, but no answer to it was seen to the end.
             if (!concluded || submitsStarted > submissions)
             {
