@@ -222,7 +222,7 @@ namespace NinjaTraderAutoLogin
                 throw new InvalidDataException("InvalidWorkerResult");
             }
 
-            return Result(value, outcome, mode);
+            return Result(value, outcome, mode, true);
         }
 
         public LoginResult Interrupt(Outcome outcome, TradingMode mode, Exception cause = null)
@@ -233,7 +233,7 @@ namespace NinjaTraderAutoLogin
                 UpdateInterrupted(value, outcome);
                 ApplyCause(value, cause);
                 JsonFiles.Write(FilePath, value);
-                return Result(value, outcome, mode);
+                return Result(value, outcome, mode, false);
             }
             catch (Exception error) when (error is IOException || error is InvalidDataException || error is UnauthorizedAccessException || error is SerializationException)
             {
@@ -267,7 +267,7 @@ namespace NinjaTraderAutoLogin
                 (mode == TradingMode.Simulation ? value.LiveSelections == 0 : value.SimulationSelections == 0);
         }
 
-        private static LoginResult Result(RunRecord value, Outcome outcome, TradingMode mode)
+        internal static LoginResult Result(RunRecord value, Outcome outcome, TradingMode mode, bool concluded)
         {
             return new LoginResult
             {
@@ -276,7 +276,10 @@ namespace NinjaTraderAutoLogin
                 LoginSubmissions = value.LoginSubmissions,
                 SimulationSelections = value.SimulationSelections,
                 LiveSelections = value.LiveSelections,
-                ActionCompletionUncertain = value.ActionCompletionUncertain
+                ActionCompletionUncertain = value.ActionCompletionUncertain,
+                SubmitsStarted = Count(value, "BeforeSubmit"),
+                ModeReached = Count(value, "BeforeSimulation") + Count(value, "BeforeLive") > 0,
+                Concluded = concluded
             };
         }
         private bool Persist()

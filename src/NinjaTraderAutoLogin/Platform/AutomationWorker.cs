@@ -118,7 +118,8 @@ namespace NinjaTraderAutoLogin
                 var engine = new LoginEngine(new TrustedTargetUi(new NativeLoginUi(target), settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted),
                     new TrustedTargetCredentials(settings.NinjaTraderPath, NinjaTraderSignature.IsTrusted,
                         new UnrejectedCredentials(() => RefusalPolicy.RequireNoRefusal(request.CredentialsRejected,
-                            SettingsStore.Load().CredentialsRejected, RejectionLatch.Current.Read()), new WindowsCredentials())),
+                            SettingsStore.Load().CredentialsRejected, RejectionLatch.Current.Read()),
+                            new RecordedCredentials(() => RejectionLatch.Current.Write(RefusalState.Uncertain), new WindowsCredentials()))),
                     new SystemClock(), evidence, TimeSpan.FromSeconds(BuildInfo.StageTimeoutSeconds), mode);
                 LoginResult result = engine.Run(request.AlreadyRunning, CancellationToken.None);
                 if (result.Outcome == Outcome.ProcessExited)

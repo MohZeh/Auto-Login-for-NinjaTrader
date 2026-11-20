@@ -63,7 +63,7 @@ namespace NinjaTraderAutoLogin
         public static string RejectedHint(string language, bool uncertain)
         {
             return uncertain
-                ? Choose(language, "Sign-in wasn't accepted. It may be the password or the connection.", "ورود پذیرفته نشد؛ ممکن است از رمز یا از اتصال باشد.")
+                ? Choose(language, "The last sign-in didn't complete. It may be the password, the connection or an interruption.", "ورود قبلی کامل نشد؛ ممکن است از رمز، اتصال یا توقف برنامه باشد.")
                 : Choose(language, "NinjaTrader rejected this username or password. It won't be resent.", "نینجاتریدر این نام کاربری یا رمز را نپذیرفت؛ ارسال نمی‌شود.");
         }
         public static string LegalNotice(string language)
@@ -191,8 +191,8 @@ namespace NinjaTraderAutoLogin
                 Live = false,
                 Title = UiText.Choose(language, "Try the same password again?", "دوباره با همین رمز امتحان شود؟"),
                 Lead = uncertain
-                    ? UiText.Choose(language, "The last sign-in wasn't accepted. It may be the password or the connection. Repeated attempts may lock your account.",
-                        "ورود قبلی پذیرفته نشد؛ ممکن است از رمز یا از اتصال باشد. تلاش‌های مکرر ممکن است حساب شما را قفل کند.")
+                    ? UiText.Choose(language, "The last sign-in didn't complete. It may be the password, the connection or an interruption. Repeated attempts may lock your account.",
+                        "ورود قبلی کامل نشد؛ ممکن است از رمز، اتصال یا توقف برنامه باشد. تلاش‌های مکرر ممکن است حساب شما را قفل کند.")
                     : UiText.Choose(language, "NinjaTrader rejected this username or password last time. Repeated attempts may lock your account.",
                         "نینجاتریدر دفعهٔ قبل این نام کاربری یا رمز را نپذیرفت. تلاش‌های مکرر ممکن است حساب شما را قفل کند."),
                 Confirm = UiText.Choose(language, "Try again", "تلاش دوباره"),
@@ -264,11 +264,11 @@ namespace NinjaTraderAutoLogin
                 case Outcome.MultipleInstances:
                     return UiText.Choose(language, "More than one NinjaTrader is running. Close the extra copy and try again.", "بیش از یک نینجاتریدر در حال اجراست؛ نسخهٔ اضافه را ببندید و دوباره تلاش کنید.");
                 case Outcome.CredentialsRejected:
-                    return UiText.Choose(language, "The last sign-in wasn't accepted, so the password was not sent again. Enter it again here.",
-                        "ورود قبلی پذیرفته نشد، پس رمز دوباره ارسال نشد. رمز را اینجا دوباره وارد کنید.");
+                    return UiText.Choose(language, "The last sign-in didn't complete, so the password was not sent again. Enter it again here.",
+                        "ورود قبلی کامل نشد، پس رمز دوباره ارسال نشد. رمز را اینجا دوباره وارد کنید.");
                 case Outcome.RefusalUnavailable:
-                    return UiText.Choose(language, "The record of an earlier refused password could not be read, so the password was not sent. Check that Windows can read your user's registry, then try again.",
-                        "ثبتِ ردشدن قبلی رمز خوانده نشد، پس رمز ارسال نشد. مطمئن شوید ویندوز به رجیستری کاربر شما دسترسی دارد و دوباره امتحان کنید.");
+                    return UiText.Choose(language, "The app could not read or update its sign-in record in the registry, so the password was not sent. Check that Windows can use your user's registry, then try again.",
+                        "برنامه نتوانست ثبت ورود را در رجیستری بخواند یا به‌روز کند، پس رمز ارسال نشد. مطمئن شوید ویندوز به رجیستری کاربر شما دسترسی دارد و دوباره امتحان کنید.");
                 case Outcome.RefusalNotCleared:
                     return UiText.Choose(language, "Your choice to try again could not be saved, so the password was not sent. Try again in a moment.",
                         "انتخاب «تلاش دوباره» ذخیره نشد، پس رمز ارسال نشد. کمی بعد دوباره امتحان کنید.");

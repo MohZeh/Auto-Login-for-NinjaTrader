@@ -7,8 +7,10 @@ namespace NinjaTraderAutoLogin
 {
     // A second, independent record of a refused password, kept in the registry. The settings
     // file holds the same fact; either one holds the password back, so one failed write,
-    // followed by a restart, cannot lose the refusal. The value exists only while a refusal
-    // is held. If both writes fail, the refusal lasts only while the app keeps running.
+    // followed by a restart, cannot lose the refusal. The worker also writes it as uncertain
+    // before each password leaves, so a stop before the answer, or failed writes after a
+    // refusal, still hold the password back as uncertain. The value exists only while a
+    // refusal or an unfinished attempt is held.
     internal sealed class RejectionLatch
     {
         public const string DefaultKeyPath = @"Software\NinjaTraderAutoLogin";

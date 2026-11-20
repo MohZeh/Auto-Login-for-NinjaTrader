@@ -37,7 +37,13 @@ password is read, the worker stops if any record holds a refusal (`CredentialsRe
 if the registry record cannot be read (`RefusalUnavailable`). A read counts as "not there"
 only when the parent key lists no such key; any other failure is "could not be read", which
 is never stored. The parent lifts a refusal only after both records are cleared and
-confirmed by a successful read.
+confirmed by a successful read. After that check, `RecordedCredentials` writes the
+registry value as uncertain before the password is handed to the engine; if the write
+cannot be confirmed, nothing is sent (`RefusalUnavailable`). After the run, `RefusalRecords`
+applies `RefusalPolicy.AfterRun` to what the run record shows: a refusal the worker saw
+replaces the attempt record, a known answer clears it, and a send that started without an
+answer the worker saw to the end keeps it. A stop of the parent or worker therefore leaves
+an uncertain refusal that the next attempt finds, even after a restart.
 
 The worker verifies the request against the existing run record and process identity.
 The engine inspects login, submits once, selects only the requested mode once, and waits

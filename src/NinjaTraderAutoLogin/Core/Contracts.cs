@@ -131,6 +131,11 @@ namespace NinjaTraderAutoLogin
         public int LiveSelections;
         public TradingMode RequestedMode;
         public bool ActionCompletionUncertain;
+        // What the run record shows about the password, for the attempt record.
+        public int SubmitsStarted;
+        public bool ModeReached;
+        // True only when the worker itself saw the run to its end and reported it.
+        public bool Concluded;
     }
 
     internal sealed class DisposeOnce

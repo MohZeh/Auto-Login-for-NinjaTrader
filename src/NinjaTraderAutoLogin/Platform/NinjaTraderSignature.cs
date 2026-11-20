@@ -170,6 +170,37 @@ namespace NinjaTraderAutoLogin
         }
     }
 
+    // Before a password is handed over to be sent, the attempt is recorded where a restart
+    // finds it, as an uncertain refusal. If the app or the worker stops before the answer is
+    // known, the next attempt asks first. If the record cannot be written, nothing is sent.
+    internal sealed class RecordedCredentials : ICredentials
+    {
+        private readonly Func<bool> recordAttempt;
+        private readonly ICredentials credentials;
+
+        public RecordedCredentials(Func<bool> recordAttempt, ICredentials credentials)
+        {
+            this.recordAttempt = recordAttempt;
+            this.credentials = credentials;
+        }
+        public Secret Read()
+        {
+            Secret secret = credentials.Read();
+            if (secret == null || !secret.Valid)
+            {
+                return secret;
+            }
+
+            if (!recordAttempt())
+            {
+                secret.Dispose();
+                throw new LoginProblem(Outcome.RefusalUnavailable);
+            }
+
+            return secret;
+        }
+    }
+
     internal sealed class TargetInspection
     {
         public bool Exists, Trusted;
