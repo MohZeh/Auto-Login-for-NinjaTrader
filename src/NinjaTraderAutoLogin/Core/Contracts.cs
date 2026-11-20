@@ -62,9 +62,11 @@ namespace NinjaTraderAutoLogin
         Secret Read();
     }
 
+    // Now only moves forward and has no meaning as a date, so a change to the Windows clock
+    // cannot shorten or stretch a stage deadline.
     internal interface IClock
     {
-        DateTime UtcNow
+        TimeSpan Now
         {
             get;
         }
@@ -104,6 +106,8 @@ namespace NinjaTraderAutoLogin
         public bool ControlCenter;
         public bool AuthenticationError;
         public bool ManualRequired;
+        // A modal dialog owned by a NinjaTrader window, while no known screen is ready.
+        public bool OwnedDialog;
         public bool Ambiguous;
         public List<ControlEvidence> Controls = new List<ControlEvidence>();
         public List<WindowEvidence> Windows = new List<WindowEvidence>();

@@ -40,7 +40,7 @@ namespace NinjaTraderAutoLogin
         private Outcome? lastOutcome;
         private bool lastActionUncertain;
         private TradingMode lastTradingMode = TradingMode.Simulation;
-        private DateTime nextPoll = DateTime.MinValue, nextStagePoll = DateTime.MinValue;
+        private TimeSpan nextPoll = TimeSpan.Zero, nextStagePoll = TimeSpan.Zero;
         private LoginProgressWindow progress;
         private volatile string activeEvidence;
         private readonly ProblemGrace watchSettle = new ProblemGrace(TimeSpan.FromSeconds(BuildInfo.ProcessSettleSeconds));
@@ -210,12 +210,12 @@ namespace NinjaTraderAutoLogin
                 BeginLogin(true, null);
             }
 
-            if (settings.Mode != LaunchMode.Watch || settingsInvalid || pause.Paused || active || exiting || DateTime.UtcNow < nextPoll)
+            if (settings.Mode != LaunchMode.Watch || settingsInvalid || pause.Paused || active || exiting || MonotonicClock.Now < nextPoll)
             {
                 return;
             }
 
-            nextPoll = openCopy != null ? DateTime.UtcNow.AddSeconds(1) : DateTime.UtcNow.AddMilliseconds(BuildInfo.WatchScanMilliseconds);
+            nextPoll = MonotonicClock.Now + (openCopy != null ? TimeSpan.FromSeconds(1) : TimeSpan.FromMilliseconds(BuildInfo.WatchScanMilliseconds));
             // NinjaTrader runs only one instance, so nothing needs scanning until this one ends.
             if (openCopy != null)
             {
@@ -232,7 +232,7 @@ namespace NinjaTraderAutoLogin
                 ProcessScan scan = ProcessScan.Find(settings.NinjaTraderPath);
                 if (scan.Unsettled)
                 {
-                    if (watchSettle.Expired(DateTime.UtcNow))
+                    if (watchSettle.Expired(MonotonicClock.Now))
                     {
                         throw scan.Problem();
                     }
@@ -285,7 +285,7 @@ namespace NinjaTraderAutoLogin
                     return scan.Process;
                 }
 
-                if (settle.Expired(DateTime.UtcNow))
+                if (settle.Expired(MonotonicClock.Now))
                 {
                     throw scan.Problem();
                 }
@@ -514,7 +514,7 @@ namespace NinjaTraderAutoLogin
                 catch (ArgumentException) { return true; }
                 catch (InvalidOperationException) { return true; }
                 catch (System.ComponentModel.Win32Exception) { }
-                if (settle.Expired(DateTime.UtcNow) || token.WaitHandle.WaitOne(250))
+                if (settle.Expired(MonotonicClock.Now) || token.WaitHandle.WaitOne(250))
                 {
                     return false;
                 }
@@ -552,8 +552,8 @@ namespace NinjaTraderAutoLogin
                     ProcessScan scan = null;
                     using (Process launched = Process.Start(new ProcessStartInfo(path) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(path) }))
                     {
-                        DateTime deadline = DateTime.UtcNow.AddSeconds(10);
-                        while (process == null && DateTime.UtcNow < deadline)
+                        TimeSpan deadline = MonotonicClock.Now + TimeSpan.FromSeconds(10);
+                        while (process == null && MonotonicClock.Now < deadline)
                         {
                             token.ThrowIfCancellationRequested();
                             scan = ProcessScan.Find(path);
@@ -874,12 +874,12 @@ namespace NinjaTraderAutoLogin
         }
         private void UpdateProgress()
         {
-            if (progress == null || !active || DateTime.UtcNow < nextStagePoll)
+            if (progress == null || !active || MonotonicClock.Now < nextStagePoll)
             {
                 return;
             }
 
-            nextStagePoll = DateTime.UtcNow.AddSeconds(1);
+            nextStagePoll = MonotonicClock.Now + TimeSpan.FromSeconds(1);
             string path = activeEvidence;
             progress.SetStage(UiText.ProgressStage(Language, path == null ? null : RunEvidence.LastStage(path), lastTradingMode));
         }

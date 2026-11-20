@@ -29,7 +29,7 @@ namespace NinjaTraderAutoLogin
         // them slow, so the pause grows with the cost and the diagnostic walk runs only now and then.
         private const int MaximumPauseMilliseconds = 1500;
         private static readonly TimeSpan DiagnosticInterval = TimeSpan.FromSeconds(5);
-        private DateTime nextDiagnostics = DateTime.MinValue;
+        private TimeSpan nextDiagnostics = TimeSpan.Zero;
         public NativeLoginUi(ProcessIdentity process)
         {
             this.process = process;
@@ -244,6 +244,11 @@ namespace NinjaTraderAutoLogin
                 }
 
                 snapshot.Windows = Describe(windows);
+                // UI Automation lists a dialog owned by a NinjaTrader window as that window's
+                // child, so the top-level check below misses it. Its type was just read for the
+                // run record; nothing in it is searched or clicked.
+                snapshot.OwnedDialog = !snapshot.LoginReady && !snapshot.SimulationReady && !snapshot.LiveReady && !snapshot.ControlCenter &&
+                    snapshot.Windows.Exists(window => window.Nested && window.Modal && !window.Offscreen);
 
                 snapshot.LiveAccountUnavailable = snapshot.LiveReady && OffersAccountCreation(windows);
                 foreach (AutomationElement window in windows)
@@ -292,9 +297,9 @@ namespace NinjaTraderAutoLogin
                         }
                     }
                 }
-                if (!snapshot.LoginReady && !snapshot.SimulationReady && !snapshot.LiveReady && !snapshot.ControlCenter && DateTime.UtcNow >= nextDiagnostics)
+                if (!snapshot.LoginReady && !snapshot.SimulationReady && !snapshot.LiveReady && !snapshot.ControlCenter && MonotonicClock.Now >= nextDiagnostics)
                 {
-                    nextDiagnostics = DateTime.UtcNow + DiagnosticInterval;
+                    nextDiagnostics = MonotonicClock.Now + DiagnosticInterval;
                     // Bounded diagnostic fallback for changed selectors. No Name, Value or Text reads.
                     foreach (AutomationElement window in windows)
                     {

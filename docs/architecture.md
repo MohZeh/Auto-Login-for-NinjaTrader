@@ -67,7 +67,9 @@ Launch watching lists processes every 3.5 seconds, and only while NinjaTrader is
 runs a single instance, so once a copy is found the coordinator holds that process and only
 asks Windows whether it has ended.
 
-Each engine wait has a deadline. An independent parent watchdog bounds a blocked provider
+Each engine wait has a deadline. Deadlines, grace periods and polling intervals use
+elapsed time from `MonotonicClock`, never the Windows clock, so changing the system time
+cannot shorten or stretch a wait. An independent parent watchdog bounds a blocked provider
 call, and cancellation terminates the worker. The parent records known completed actions
 and any uncertain last action from persisted progress. It never kills NinjaTrader.
 
